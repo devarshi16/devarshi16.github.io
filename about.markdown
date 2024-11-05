@@ -3,7 +3,12 @@ layout: page
 title: About
 permalink: /about/
 ---
+<!--
+<center><img src="https://github.com/devarshi16/devarshi16.github.io/blob/gh-pages/assets/devarshi_passport.jpeg" alt="devarshi" width="200"/></center>
+-->
+
 <center><img src="{{site.baseurl}}/assets/devarshi_passport.jpeg" alt="devarshi" width="200"/></center>
+
 <!--
 ![devarshi aggarwal]({{site.baseurl}}/assets/devarshi_passport.jpeg "Devarshi")
 -->

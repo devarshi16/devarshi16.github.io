@@ -1,5 +1,5 @@
 ---
-layout: post
+layout: default
 title:  "Resume"
 date:   2024-11-05 13:59:52 +0530
 categories: Resume
