@@ -56,3 +56,9 @@ plugins:
 #   - vendor/cache/
 #   - vendor/gems/
 #   - vendor/ruby/
+
+collections:
+  mybooks:
+    output: true
+    permalink: /books/:name/
+
