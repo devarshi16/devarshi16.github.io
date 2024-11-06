@@ -13,7 +13,7 @@ permalink: /books/
       <div class="book-card-content">
         <h2>{{ book.title }}</h2>
         <p>{{ book.description }}</p>
-        <a href="{{ book.book_url }}" class="book-card-link">Read more</a>
+        <a href="{{ book.book_url }}" class="book-card-link">READ NOW</a>
       </div>
     </div>
   {% endfor %}
