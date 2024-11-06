@@ -21,13 +21,7 @@
 title: Devarshi Aggarwal
 email: devershigpt6@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
-  A machine learning expert and Python developer 
-  with hands-on experience in computer vision projects like 
-  footfall counting and license plate recognition. I work at Jio,
-  where I focus on machine learning solutions, and I’m currently
-  expanding my skills with Rust. When I’m not coding, I enjoy
-  writing about AI and algorithms on Medium and self-publishing
-  books. Thanks for stopping by—feel free to connect! 
+  Portfolio Website 
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "http://devarshi16.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 github_username:  devarshi16

@@ -36,16 +36,14 @@
 }
 
 .book-card-link {
-  color: white;
+  color: black !important;
   text-decoration: none;
-  font-weight: bold;
   border: 1px solid #FF8F00;
   padding: 10px;
   background-color: #FFA41C; /* #ADD8E6; */
   transition-duration: 0.1s;
   border-radius: 5px;
 }
-
 .book-card-link:hover {
   text-decoration: none;
   background-color: #ff8f00;
