@@ -56,4 +56,56 @@
   background-color: #ff8f00;
   color: black;
 }
+.blog-section{
+  display: flex;
+  //align-items: flex-end;
+  flex-direction: column;
+  gap: 10px;
+}
+.blog-card {
+  display: flex;
+  flex: 1;
+  border: 1px solid #eee;
+  padding: 10px;
+  background-color: #fbfbfb;
+  gap: 10px;
+  border-radius: 5px;
+}
 
+.blog-card-image {
+  flex-shrink: 0;
+}
+
+.blog-card-image img {
+  max-width: 100px;
+  height: auto;
+  border-radius: 5px;
+}
+
+.blog-card-description {
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.blog-card h2 {
+  margin-top: 0;
+  font-size: 1.2em;
+}
+
+.blog-card p {
+}
+
+.blog-card-link {
+  color: #0073e6;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.blog-card-link:hover {
+  text-decoration: underline;
+}
+.blog-card-link-wrap{
+  display: flex;
+  justify-content: flex-end;
+}

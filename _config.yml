@@ -55,4 +55,7 @@ collections:
   mybooks:
     output: true
     permalink: /books/:name/
+  blogs:
+    output: true
+    permalink: /blog/:name/
 
