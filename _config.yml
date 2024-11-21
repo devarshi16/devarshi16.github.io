@@ -51,6 +51,12 @@ plugins:
 #   - vendor/gems/
 #   - vendor/ruby/
 
+header_pages:
+  - index.md
+  - about.md
+  - books.md
+  - blog.md
+
 collections:
   mybooks:
     output: true

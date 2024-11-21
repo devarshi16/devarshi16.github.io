@@ -51,17 +51,20 @@
   border-radius: 5px;
   width: fit-content;
 }
+
 .book-card-link:hover {
   text-decoration: none;
   background-color: #ff8f00;
   color: black;
 }
+
 .blog-section{
   display: flex;
   //align-items: flex-end;
   flex-direction: column;
   gap: 10px;
 }
+
 .blog-card {
   display: flex;
   flex: 1;
@@ -105,7 +108,37 @@
 .blog-card-link:hover {
   text-decoration: underline;
 }
+
 .blog-card-link-wrap{
   display: flex;
   justify-content: flex-end;
+}
+
+.tags {
+  margin-top: 10px;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.tag {
+  display: inline-block;
+  margin-right: 5px;
+  padding: 3px 8px;
+  background-color: #CCC;
+  color: white;
+  border-radius: 3px;
+  font-size: 0.8em;
+}
+
+.tag:hover {
+  background-color: #AAA;
+}
+
+.blog-image {
+  width: 100%;
+  text-align: center;
+  img{
+    width: 600px;
+    height: auto;
+  };
 }

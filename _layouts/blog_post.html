@@ -10,6 +10,9 @@
 
     <main class="page-content" aria-label="Content">
       <article>
+        <div class="blog-image">
+          <img src= {{page.thumbnail}}/>
+        </div>
       <div class="wrapper">
         <h1><b>{{ page.title }}</b></h1>
       <p><small>Published on {{ page.date | date: "%B %d, %Y" }}</small></p>
