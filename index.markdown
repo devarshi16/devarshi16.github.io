@@ -13,7 +13,12 @@ layout: home
 
 # **DEVARSHI AGGARWAL**
 
-Navi Mumbai| +91 9792910973 | devershigpt6@gmail.com | [linkedin/devarshi-aggarwal/](https://www.linkedin.com/in/devarshi-aggarwal/)
+Bengaluru | +91 9792910973 | devershigpt6@gmail.com | [linkedin/devarshi-aggarwal/](https://www.linkedin.com/in/devarshi-aggarwal/)
+
+<a class="cv-preview-card" href="{{site.baseurl}}/assets/Devarshi_Aggarwal_CV.pdf" download aria-label="Download CV PDF">
+  <img src="{{site.baseurl}}/assets/Devarshi_Aggarwal_CV_preview.png" alt="Preview of Devarshi Aggarwal CV PDF">
+  <span class="cv-preview-badge">PDF</span>
+</a>
 
 ## **SUMMARY**	
 
@@ -21,8 +26,14 @@ A dynamic and innovative Deep Learning Engineer with hands-on experience in comp
 
 ## **EXPERIENCE**	
 
+#### **Samsung Electro Mechanics, India**  
+*Deep Learning Engineer*	*December 2024 \- Present*
+
+* Worked on dual-arm titan robot Isaac simulator reinforcement learning and imitation learning training. Improved task success rate from **0% to 99%** after running **100+ RL and IL experiments**.  
+* Worked on a driver management system with features including gaze direction and sleepiness detection. Trained face detection, identification, and facial landmark detection models with **90%+ accuracy**.
+
 #### **Jio, India**  
-*Deep Learning Engineer*	*April 2022 \- Present*
+*Deep Learning Engineer*	*April 2022 \- December 2024*
 
 * Worked on novel architecture for an optimized deployment of people footfall counting, heatmap and flowmap.  
 * Improved **detection** in JioANPR system from **90% to 95%**. Improved recognition accuracy from **83%** to **94%**. Overall accuracy of pipeline post tracking is at **99%**. Developed reproducible retraining pipeline.  
@@ -87,8 +98,8 @@ A dynamic and innovative Deep Learning Engineer with hands-on experience in comp
 
 * GitHub \- [https://github.com/devarshi16](https://github.com/devarshi16)  
 * Technical Blog \- [https://attackonalgorithms.wordpress.com/](https://attackonalgorithms.wordpress.com/)
+* CV \- <a href="{{site.baseurl}}/assets/Devarshi_Aggarwal_CV.pdf" download>CV PDF</a>
 
 ## **OTHER ACHIEVEMENTS**
 
 * Secured **AIR-5320 (GEN) in IIT JEE-Advanced 2015**
-
