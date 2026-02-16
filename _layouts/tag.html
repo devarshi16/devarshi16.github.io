@@ -2,10 +2,26 @@
 layout: default
 ---
 
-<h1>Posts tagged with "{{ page.tag }}"</h1>
+<h1>Posts tagged with "{{ page.title | default: page.tag }}"</h1>
 <div class="blog-section">
+  {% if page.tags %}
+    {% assign tags_to_match = page.tags %}
+  {% else %}
+    {% assign tags_to_match = page.tag | split: "|||" %}
+  {% endif %}
+
+  {% assign has_posts = false %}
   {% for post in site.blogs %}
-    {% if post.tags contains page.tag %}
+    {% assign matches_tag = false %}
+    {% for tag in tags_to_match %}
+      {% if post.tags contains tag %}
+        {% assign matches_tag = true %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
+
+    {% if matches_tag %}
+      {% assign has_posts = true %}
       <div class="blog-card">
         <div class="blog-card-content">
           <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
@@ -15,4 +31,8 @@ layout: default
       </div>
     {% endif %}
   {% endfor %}
+
+  {% unless has_posts %}
+    <p>No posts found for this tag yet.</p>
+  {% endunless %}
 </div>
