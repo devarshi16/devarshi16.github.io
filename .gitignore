@@ -4,3 +4,10 @@ _site
 .jekyll-metadata
 Gemfile.lock
 vendor
+node_modules/
+dist/
+.astro/
+public/assets/
+.local-qa/
+public/examples/
+__pycache__/

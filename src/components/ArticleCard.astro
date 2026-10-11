@@ -1,0 +1,17 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { articleUrl } from '../lib/content-policy';
+interface Props { post: CollectionEntry<'blogs'>; index?: number; }
+const { post, index = 0 } = Astro.props;
+const shortDescriptions: Record<string,string> = {
+  'diy-wired-arduino-pro-micro-gamepad': 'From a PCB and a Pro Micro to a working USB gamepad. The build, the firmware, and the things I learned.',
+  'diy-raspberry-pi-power-hat': 'Making a small power board for the Raspberry Pi, with the practical details of the build.',
+  'fast-one-hot-encoding-using-numpy-no-for-loops': 'Thinking in arrays: vectorized label encoding, class mappings, and the cost of dense representations.',
+  'linear-vs-logistic-numpy': 'Implementing two familiar learning algorithms from scratch, and understanding the evaluation pipeline.',
+};
+---
+<a class="article-card" href={articleUrl(post.id)} data-category={post.data.category} data-search={`${post.data.title} ${post.data.tags.join(' ')} ${post.data.description}`}>
+  <div class={`article-art art-${index%3}`}><span>{post.data.category}</span><svg viewBox="0 0 300 150" aria-hidden="true"><path d="M30 100L90 50L150 90L210 30L270 75"/><circle cx="90" cy="50" r="9"/><circle cx="150" cy="90" r="9"/><circle cx="210" cy="30" r="9"/><path d="M20 120H280M50 20V130M250 20V130" class="grid-line"/></svg><i>↗</i></div>
+  <div class="article-meta"><time datetime={post.data.date.toISOString()}>{post.data.date.toLocaleDateString('en-GB',{month:'short',year:'numeric',timeZone:'UTC'})}</time><span>{post.data.readingMinutes} min read</span>{!post.data.published&&<span class="draft-badge">Local draft</span>}</div>
+  <h3>{post.data.title}</h3><p>{shortDescriptions[post.id]??post.data.description.replace(/\[\.\.\.\]/g,'').slice(0,160)}</p>
+</a>

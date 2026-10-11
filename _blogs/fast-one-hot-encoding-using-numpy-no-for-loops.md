@@ -2,10 +2,16 @@
 layout: blog_post
 title: "Fast One Hot Encoding using Numpy (No For Loops)"
 date: 2021-07-11
-description: "In a lot of artificial intelligence applications, specially in supervised learning classification problems, where the labels for each of the datapoints are available, we often have a one-dimensional array containing the classes of each of the datapoints. Depending upon the machine learning algorithm we are going to apply to our dataset for classification, we might [...]"
+updated: 2026-10-11
+description: "Vectorized label encoding with a reusable class vocabulary, repeated timing measurements, and explicit memory costs."
 thumbnail: "/assets/images/blogs/wordpress/2021/07/one_hot_compare-1.png"
 tags: ["Algorithms","algorithms comparision","diy","one hot","python"]
 ---
+
+<p class="article-warning"><strong>Updated October 2026.</strong> The vectorized implementation now uses a reusable class vocabulary rather than an array indexed up to the largest numeric label. It supports negative and noncontiguous labels. The timing example uses repeated measurements. <a href="/examples/numpy_tutorials.py">Download the tested helpers</a>. The figure below is the original 2021 result, not a new benchmark of the corrected code.</p>
+
+<pre class="wp-block-code"><code>import numpy as np</code></pre>
+
 
 
 <p class="wp-block-paragraph">In a lot of artificial intelligence applications, specially in supervised learning classification problems, where the labels for each of the datapoints are available, we often have a one-dimensional array containing the classes of each of the datapoints. Depending upon the machine learning algorithm we are going to apply to our dataset for classification, we might need to one-hot encode our labels.</p>
@@ -20,7 +26,7 @@ tags: ["Algorithms","algorithms comparision","diy","one hot","python"]
 
 
 
-<pre class="wp-block-code"><code>&gt;&gt;&gt; Y=numpy.randdom.randint(15,size=10).reshape(-1,1)
+<pre class="wp-block-code"><code>&gt;&gt;&gt; Y=np.array([12, 8, 4, 4, 11, 0, 10, 10, 1, 8]).reshape(-1,1)
 &gt;&gt;&gt; Y
 array(&#091;&#091;12],
        &#091; 8],
@@ -35,7 +41,7 @@ array(&#091;&#091;12],
 
 
 
-<p class="wp-block-paragraph">Where each row contains the class number of the correspoding row for the datapoint <code>X</code>. Note that, in our example there are 6 unique classes, namely, <code>0,1,4,8,10,11,12</code> .One hot encoding for the above array Y will be, </p>
+<p class="wp-block-paragraph">Where each row contains the class number of the corresponding row for the datapoint <code>X</code>. Note that, in our example there are 7 unique classes, namely, <code>0,1,4,8,10,11,12</code> .One hot encoding for the above array Y will be, </p>
 
 
 
@@ -75,36 +81,32 @@ array(&#091;&#091;0., 0., 0., 0., 0., 0., 1.],
 
 
 
-<pre class="wp-block-code"><code>def one_hot_for(Y):
-    data_size=Y.shape&#091;0]
-    classes=np.unique(Y).reshape(-1,1)
-    num_classes=classes.shape&#091;0]
-
-    one_hot=np.zeros((data_size,num_classes))
-    for row in range(data_size):
-        one_hot&#091;row,np.where(classes==Y&#091;row])&#091;0]]=1
-
-    return one_hot,classes</code></pre>
-
-
-
-<h2 class="wp-block-heading">The hard solution to the easy problem(vector(ish))</h2>
+<pre class="wp-block-code"><code>def one_hot_for(Y, classes=None, dtype=np.float32):
+    labels = np.asarray(Y).reshape(-1)
+    vocabulary = np.unique(labels if classes is None else np.asarray(classes).reshape(-1))
+    mapping = {value: index for index, value in enumerate(vocabulary)}
+    encoded = np.zeros((len(labels), len(vocabulary)), dtype=dtype)
+    for row, label in enumerate(labels):
+        if label not in mapping:
+            raise ValueError("A label is absent from the supplied class vocabulary")
+        encoded[row, mapping[label]] = 1
+    return encoded, vocabulary.reshape(-1, 1)</code></pre>
 
 
 
-<pre class="wp-block-code"><code>def one_hot(Y):
-    data_size=Y.shape&#091;0]
-    classes=np.unique(Y).reshape(-1,1)
-    num_classes=classes.shape&#091;0]
+<h2 class="wp-block-heading">Vectorized encoding with a class vocabulary</h2>
 
-    class_mappings=np.arange(0,max(Y)+1)
-    class_mappings&#091;np.unique(classes)]=np.arange(num_classes)
-    Y=class_mappings&#091;Y]
 
-    one_hot=np.zeros((data_size,num_classes))
-    one_hot&#091;np.arange(data_size).reshape(-1,1),Y.reshape(-1,1)]=1
-    class_col=np.sort(classes)
-    return one_hot,class_col</code></pre>
+
+<pre class="wp-block-code"><code>def one_hot(Y, classes=None, dtype=np.float32):
+    labels = np.asarray(Y).reshape(-1)
+    vocabulary = np.unique(labels if classes is None else np.asarray(classes).reshape(-1))
+    indices = np.searchsorted(vocabulary, labels)
+    if len(labels) and (np.any(indices &gt;= len(vocabulary)) or not np.array_equal(vocabulary[indices], labels)):
+        raise ValueError("A label is absent from the supplied class vocabulary")
+    encoded = np.zeros((len(labels), len(vocabulary)), dtype=dtype)
+    encoded[np.arange(len(labels)), indices] = 1
+    return encoded, vocabulary.reshape(-1, 1)</code></pre>
 
 
 
@@ -133,37 +135,25 @@ with open(file_name,"w+") as random_labels:
 
 
 
-<pre class="wp-block-code"><code>import matplotlib.pyplot as plt
-import time
-import numpy as np
-from helper_functions import one_hot,one_hot_for
+<pre class="wp-block-code"><code>import numpy as np
+from timeit import repeat
+import matplotlib.pyplot as plt
+from numpy_tutorials import one_hot, one_hot_for
 
-filename= "randoms.txt"
-
-with open(filename,"r+") as f:
-    Y=f.readlines()
-    int_map=map(int,Y)
-    Y=list(int_map)
-    Y=np.asarray(Y).reshape(-1,1)
-
-one_hot_timings=&#091;]
-one_hot_for_timings=&#091;]
-for i in range(100,10000,100):
-    start=time.time()
-    _,_=one_hot(Y&#091;:i])
-    end=time.time()
-    one_hot_timings.append(end-start)
-
-    start=time.time()
-    _,_=one_hot_for(Y&#091;:i])
-    end=time.time()
-    one_hot_for_timings.append(end-start)
-
-plt.plot(one_hot_timings,label="one_hot_vector")
-plt.plot(one_hot_for_timings,label="one_hot_for")
-plt.xlabel('data_size for every 100 datapoints')
-plt.ylabel('time of execution')
-plt.legend(loc='best')
+rng = np.random.default_rng(0)
+labels = rng.integers(0, 1000, size=10000)
+sizes = range(100, 10000, 100)
+for function in (one_hot, one_hot_for):
+    timings = []
+    for size in sizes:
+        batch = labels[:size]
+        function(batch)  # warm up
+        samples = repeat(lambda: function(batch), repeat=7, number=3)
+        timings.append(np.median(samples) / 3)
+    plt.plot(list(sizes), timings, label=function.__name__)
+plt.xlabel("Number of labels")
+plt.ylabel("Median seconds per call")
+plt.legend()
 plt.show()</code></pre>
 
 
@@ -176,13 +166,4 @@ plt.show()</code></pre>
 
 
 
-<h2 class="wp-block-heading">Additional notes</h2>
-
-
-
-<ul class="wp-block-list"><li>Libraries such as scipy, torch, sklearn etc, could probably do this faster.</li><li>Depending on how often you call the above functions in your applications, it might not be relevant for you to choose between the above two methods as both need less than a few seconds at most.</li><li>The assimilated code for the above can be found <a href="https://gist.github.com/devarshi16/5fd9266cf1fa83143088b1f630b363d3">here</a>.</li></ul>
-
-
-
-<p class="wp-block-paragraph"></p>
-
+<h2>Additional notes</h2><ul><li>Fit the class vocabulary on training labels and reuse it for other splits: <code>encoded, classes = one_hot(train_labels)</code>, then <code>validation, _ = one_hot(val_labels, classes=classes)</code>. Unknown classes raise an error.</li><li>A dense output uses <code>N × C × dtype.itemsize</code> bytes. The float32 default uses four bytes per cell; many classes can make this costly. Consider sparse storage when appropriate.</li><li>Timing depends on input shape, class count, allocation, dtype, hardware, and measurement method. Repeated timings are measurements of this workload, not a universal ranking.</li><li><a href="/examples/numpy_tutorials.py">Current tested source</a></li></ul>

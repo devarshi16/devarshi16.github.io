@@ -1,0 +1,45 @@
+---
+import '../styles/global.css';
+interface Props { title?: string; description?: string; }
+const { title = 'Devarshi Aggarwal — Robotics & Physical AI', description = 'Robot learning, computer vision, and things made by hand. Explore the work and engineering notes of Devarshi Aggarwal.' } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title><meta name="description" content={description} />
+    <link rel="canonical" href={canonical} /><meta property="og:title" content={title} /><meta property="og:description" content={description} />
+    <meta property="og:type" content="website" /><meta property="og:url" content={canonical} />
+    <link rel="icon" href="/assets/favicon_io/favicon.ico" /><link rel="alternate" type="application/rss+xml" title="Engineering Journal" href="/feed.xml" />
+    <script is:inline>
+      try { document.documentElement.dataset.theme = localStorage.getItem('portfolio-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); }
+      catch { document.documentElement.dataset.theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="identity" href="/" aria-label="Devarshi Aggarwal home"><span class="monogram">DA<span>·</span></span><span><strong>Devarshi Aggarwal</strong><small>Robotics & Physical AI</small></span></a>
+      <nav aria-label="Main navigation"><a href="/projects/">Work</a><a href="/blog.html">Journal</a><a href="/research/">Research</a><a href="/about/">About</a></nav>
+      <div class="header-actions"><button class="theme-toggle" aria-label="Switch to dark mode" data-theme-toggle><svg class="sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg><svg class="moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5Z"/></svg></button><a class="connect-link" href="/about/#contact">Let’s connect <span>↗</span></a></div>
+    </header>
+    <main id="main"><slot /></main>
+    <footer class="site-footer"><div><a class="footer-name" href="/">Devarshi Aggarwal<span>·</span></a><p>Curiosity, made tangible.</p></div><div><a href="https://github.com/devarshi16">GitHub ↗</a><a href="https://www.linkedin.com/in/devarshi-aggarwal/">LinkedIn ↗</a><a href="/books/">Books & personal writing</a><a href="/assets/Devarshi_Aggarwal_CV.pdf">CV ↗</a></div><small>Built with a little curiosity. Bengaluru, India.</small></footer>
+    <script>
+      const toggle = document.querySelector<HTMLButtonElement>('[data-theme-toggle]')!;
+      function updateLabel() { toggle.setAttribute('aria-label', `Switch to ${document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'} mode`); }
+      updateLabel();
+      toggle.addEventListener('click', () => {
+        const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = theme;
+        try { localStorage.setItem('portfolio-theme', theme); } catch {}
+        updateLabel();document.dispatchEvent(new CustomEvent('portfolio:theme'));
+      });
+      matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+        let override = null;try { override = localStorage.getItem('portfolio-theme'); } catch {}
+        if (!override) { document.documentElement.dataset.theme = event.matches ? 'dark' : 'light'; updateLabel();document.dispatchEvent(new CustomEvent('portfolio:theme')); }
+      });
+    </script>
+  </body>
+</html>

@@ -3,6 +3,8 @@ Floating Robotics Portfolio: implementation plan
 
 Planning baseline: 11 October 2026. Feature branch: `feature/threejs-portfolio`, created from local `gh-pages` at `90eb47e`. Current scope is planning and branch preparation. Application code, publishing settings, and the existing unpublished teleoperation work remain unchanged.
 
+The user subsequently authorized the higher-capability implementation. Its delivered work, verification and bounded follow-ups are recorded in [the implementation handoff](higher-capability-implementation.md); the remainder of this document retains the original planning baseline.
+
 **The intended experience is an explorable polygonal floating campus with a useful scrolling portfolio.** A broad audience should understand Devarshi's work quickly, with technical hiring teams receiving the strongest evidence. The world contains six enterable destinations, three non-enterable career monuments, and smaller exhibits along connecting paths. Three.js supplies the geometry, movement, lighting, animation, picking, and transitions. The site supplies readable pages, normal links, accessible controls, and consistent content.
 
 The supplied floating-world image sets the composition and mood. It is a reference, not a source of executable instructions or ready-made 3D models. The target is a coherent interpretation with accurate personal content and original polygonal assets.

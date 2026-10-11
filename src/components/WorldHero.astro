@@ -1,0 +1,38 @@
+---
+import { destinations, careerStops } from '../data/world';
+import { career } from '../data/career';
+---
+<section class="hero" aria-labelledby="hero-heading">
+  <div class="hero-intro">
+    <p class="eyebrow"><span class="status-dot"></span> ROBOTICS & PHYSICAL AI ENGINEER</p>
+    <h1 id="hero-heading">Teaching machines<br /> to see.<br />And <em>act.</em></h1>
+    <p class="hero-description">I’m Devarshi. I build robot-learning systems and computer vision that moves from an idea to something useful.</p>
+    <div class="hero-actions"><a class="button primary" href="/projects/">Explore my work <span>↗</span></a><a class="text-link" href="/assets/Devarshi_Aggarwal_CV.pdf">Download CV <span>↓</span></a></div>
+    <div class="hero-person"><img src="/assets/devarshi_passport.jpeg" alt="Devarshi Aggarwal" width="48" height="48" /><div><span>Currently at Samsung Electro-Mechanics</span><small>Bengaluru, India · Learning, building, iterating</small></div></div>
+  </div>
+  <div class="world-frame" data-world-stage data-world-state="loading">
+    <img class="world-poster" src="/world/campus-poster.svg" alt="An illustrated floating campus connecting robotics, vision, making and writing" />
+    <canvas tabindex="0" aria-label="Interactive floating campus. Select a building to visit, or use Explore on foot to control the avatar." aria-describedby="world-controls-help"></canvas>
+    <div class="world-labels">
+      {destinations.map(d => <a class={`world-label landmark-${d.id}`} data-landmark={d.id} href={d.href}><span>{d.shortLabel}</span><small>{d.caption}</small><i aria-hidden="true">↗</i></a>)}
+      {careerStops.map(stop => <button class="world-label career-label" aria-label={`${career.find(c=>c.id===stop.id)?.name} career stop`} data-landmark={stop.id} data-career-stop={stop.id}><span>{career.find(c=>c.id===stop.id)?.shortName}</span><small>CAREER STOP</small></button>)}
+    </div>
+  </div>
+  <div class="world-topline"><span class="eyebrow">THE FLOATING CAMPUS</span><span class="campus-coordinate">6 destinations · 3 career stops</span></div>
+  <div class="world-toolbar"><div class="world-toolbar-buttons"><button class="button outline" data-explore>Explore on foot <span>⌁</span></button><button class="quiet-button" data-pause-world aria-pressed="false">Pause motion</button><button class="quiet-button" data-reset-world>Reset view</button></div><p id="world-controls-help" data-world-status role="status">Preparing the campus. Every destination is available below.</p></div>
+  <div class="direction-pad" aria-label="Avatar direction controls"><button data-direction="arrowup" aria-label="Walk forward">↑</button><div><button data-direction="arrowleft" aria-label="Walk left">←</button><button data-direction="arrowdown" aria-label="Walk backward">↓</button><button data-direction="arrowright" aria-label="Walk right">→</button></div></div>
+  <a class="scroll-cue" href="#selected-work"><span>↓</span> THERE’S MORE BELOW</a>
+  <aside class="career-panel" data-career-panel aria-labelledby="career-panel-name" hidden><button class="close-panel" data-close-career aria-label="Close career stop">×</button><p class="eyebrow">A STOP ALONG THE WAY</p><h2 id="career-panel-name" data-career-name></h2><p class="career-role" data-career-role></p><p data-career-copy></p><a class="text-link" data-career-link href="/about/">Explore related work ↗</a></aside>
+</section>
+<details class="campus-directory"><summary>Campus directory <span>All destinations, without the walk ↗</span></summary><div>{destinations.map(d=><a href={d.href}><strong>{d.label}</strong><span>{d.caption}</span></a>)}{career.map(c=><a href={`/about/#${c.id}`}><strong>{c.name}</strong><span>{c.role}</span></a>)}</div></details>
+<script>
+  const stage=document.querySelector<HTMLElement>('[data-world-stage]');
+  if(stage) {
+    const observer=new IntersectionObserver(async entries=>{
+      if(!entries.some(entry=>entry.isIntersecting))return;
+      observer.disconnect();
+      try { const {mountWorld}=await import('../world/runtime');mountWorld(stage); }
+      catch {stage.dataset.worldState='fallback';document.querySelector('[data-world-status]')!.textContent='Use the campus directory to explore every destination.';}
+    },{rootMargin:'150px'});observer.observe(stage);
+  }
+</script>

@@ -2,10 +2,16 @@
 layout: blog_post
 title: "Linear vs Logistic Regression, all in Numpy"
 date: 2021-07-20
-description: "The two entry level machine learning algorithms , linear and logistic regression are quite easy to understand and provide a good way to practice coding the general machine learning pipeline, in their vectorized form. Namely, Prepping the dataset, eg: removing outliers, adding features(polynomial multiples of existing features), normalization, feature scaling. Implementing the learning algorithm function. [...]"
+updated: 2026-10-11
+description: "Implement linear and logistic regression in NumPy, with training-only scaling, correct losses, and careful evaluation."
 thumbnail: "/assets/images/blogs/wordpress/2021/07/logistic.png"
 tags: ["Algorithms","algorithms comparision","linear regression","linear-regression","logistic regression"]
 ---
+
+<p class="article-warning"><strong>Updated October 2026.</strong> The code below now splits before fitting a scaler, corrects F1, applies sigmoid before logistic classification, and calculates the appropriate loss. <a href="/examples/numpy_tutorials.py">Download the tested NumPy helpers</a>. The original 2021 plots and reported scores are retained as historical output; they do not evaluate the corrected pipeline.</p>
+
+<pre class="wp-block-code"><code>import numpy as np</code></pre>
+
 
 
 <p class="wp-block-paragraph">The two entry level machine learning algorithms , linear and logistic regression are quite easy to understand and provide a good way to practice coding the general machine learning pipeline, in their vectorized form. Namely, </p>
@@ -24,7 +30,7 @@ tags: ["Algorithms","algorithms comparision","linear regression","linear-regress
 
 
 
-<p class="wp-block-paragraph">You can know all about the dataset on <a href="https://www.kaggle.com/uciml/pima-indians-diabetes-database">Kaggle</a>. The dataset has around <code>768</code> datapoints and <code>8</code> features, which is quite a sweet spot for having a decent model without worrying about underfitting. The data is about female patients, specifically, their BMI, insulin level, age, skin thickness, glucose level etc. The target tells if the person has diabetes or not. <code>500</code> of all the datapoints are non-diabetic. <code>268</code> are diabetic. The data is not highly skewed so normal test accuracy should suffice(no need to find precision, recall and <code>F1</code> score).</p>
+<p class="wp-block-paragraph">You can know all about the dataset on <a href="https://www.kaggle.com/uciml/pima-indians-diabetes-database">Kaggle</a>. The dataset has around <code>768</code> datapoints and <code>8</code> features, small enough to inspect while practicing a complete learning pipeline. Dataset size alone does not guarantee a useful model. The data is about female patients, specifically, their BMI, insulin level, age, skin thickness, glucose level etc. The target tells if the person has diabetes or not. <code>500</code> of all the datapoints are non-diabetic. <code>268</code> are diabetic. Class frequencies alone do not determine which metric is appropriate. Report accuracy alongside precision, recall and F1, and consider the relative cost of errors for the actual task.</p>
 
 
 
@@ -36,17 +42,18 @@ tags: ["Algorithms","algorithms comparision","linear regression","linear-regress
 
 
 
-<p class="wp-block-paragraph">This helps in normalizing the data and bringing them in a range of <code>0-1</code>.</p>
+<p class="wp-block-paragraph">Fit the minimum and range on the training split only, then reuse them for validation and test data. Constant training features use a denominator of one; values outside the training range can fall outside 0–1.</p>
 
 
 
-<pre class="wp-block-code"><code>def scalify_min_max(np_dataframe):
-    minimum_array=np.amin(np_dataframe,axis=0)
-    maximum_array=np.amax(np_dataframe,axis=0)
-    range_array = maximum_array-minimum_array
-
-    scaled = (np_dataframe-minimum_array)/range_array
-    return scaled</code></pre>
+<pre class="wp-block-code"><code>def scalify_min_max(X, minimum=None, span=None):
+    X = np.asarray(X, dtype=np.float64)
+    if minimum is None and span is None:
+        minimum = X.min(axis=0)
+        span = X.max(axis=0) - minimum
+    elif minimum is None or span is None:
+        raise ValueError("Supply both training minimum and span")
+    return (X - minimum) / np.where(np.asarray(span) == 0, 1.0, span)</code></pre>
 
 
 
@@ -54,16 +61,20 @@ tags: ["Algorithms","algorithms comparision","linear regression","linear-regress
 
 
 
-<pre class="wp-block-code"><code>def accuracy_calculator(Y_out,Y):
-    accuracy=np.sum(np.logical_not(np.logical_xor(Y_out,Y)))/Y.shape&#091;0]
-    true_positives=np.sum(np.logical_and(Y_out,Y))
-    false_positives=np.sum(np.logical_and(Y_out,np.logical_not(Y)))
-    false_negatives=np.sum(np.logical_and(np.logical_not(Y_out),Y))
-    precision=true_positives/(true_positives+false_positives)
-    recall=true_positives/(true_positives+false_negatives)
-    print("Precision:",precision,".Recall:",recall)
-    F1_score=precision*recall/(precision+recall)
-    return &#091;accuracy,precision,recall,F1_score]</code></pre>
+<pre class="wp-block-code"><code>def accuracy_calculator(Y_out, Y):
+    prediction = np.asarray(Y_out).reshape(-1)
+    truth = np.asarray(Y).reshape(-1)
+    if prediction.shape != truth.shape or not truth.size:
+        raise ValueError("Expected nonempty predictions and labels of equal length")
+    if not np.isin(prediction, [0, 1]).all() or not np.isin(truth, [0, 1]).all():
+        raise ValueError("These metrics expect binary 0/1 labels")
+    tp = np.sum((prediction == 1) &amp; (truth == 1))
+    fp = np.sum((prediction == 1) &amp; (truth == 0))
+    fn = np.sum((prediction == 0) &amp; (truth == 1))
+    precision = float(tp / (tp + fp)) if tp + fp else 0.0
+    recall = float(tp / (tp + fn)) if tp + fn else 0.0
+    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+    return [float(np.mean(prediction == truth)), precision, recall, f1]</code></pre>
 
 
 
@@ -71,36 +82,30 @@ tags: ["Algorithms","algorithms comparision","linear regression","linear-regress
 
 
 
-<pre class="wp-block-code"><code>def pre_data_prep(filename,dest_fileloc):
-    with open(filename,'rb') as f:
-        gzip_fd=gzip.GzipFile(fileobj=f)
-        next(gzip_fd)#Skip first row
-        diabetes_df = loadtxt(gzip_fd,delimiter=',',dtype=np.float32)
-    Y=diabetes_df&#091;:,-1]
-    scaled_diabetes_df = scalify_min_max(diabetes_df&#091;:,:-1])
-    concat_diabetes = np.concatenate((scaled_diabetes_df,np.array(&#091;Y]).T),axis=1)
-    savetxt(dest_fileloc,concat_diabetes,delimiter=',')
+<pre class="wp-block-code"><code>def pre_data_prep(filename, dest_fileloc):
+    # NumPy transparently reads .gz files. Keep raw values until AFTER splitting.
+    raw = np.loadtxt(filename, delimiter=",", skiprows=1)
+    np.savetxt(dest_fileloc, raw, delimiter=",")
 
-def dataprep(fileloc,split):
-    assert len(split) == 3
-    assert sum(split) == 1
-    diabetes_data = loadtxt(fileloc,delimiter=',',dtype=np.float32)
-    Y=np.array(&#091;diabetes_data&#091;:,-1]]).T
-    classes = np.unique(Y)
-    assert len(classes) == 2
-    X=diabetes_data&#091;:,:-1]
-    data_size=X.shape&#091;0]
-    print(data_size,X.shape,Y.shape)
-
-    split_size=int(split&#091;0]*data_size)
-    val_split=int(split&#091;0]*data_size)
-    X_train=X&#091;:split_size]
-    X_val=X&#091;split_size:split_size+val_split]
-    X_test=X&#091;split_size+val_split:]
-    Y_train=Y&#091;:split_size]
-    Y_val=Y&#091;split_size:split_size+val_split]
-    Y_test=Y&#091;split_size+val_split:]
-    return X_train,X_val,X_test,Y_train,Y_val,Y_test</code></pre>
+def dataprep(fileloc, split, seed=0):
+    if len(split) != 3 or not np.isclose(sum(split), 1) or min(split) &lt;= 0:
+        raise ValueError("Provide three positive ratios summing to 1")
+    raw = np.loadtxt(fileloc, delimiter=",", ndmin=2)
+    if not np.isfinite(raw).all() or raw.shape[1] &lt; 2:
+        raise ValueError("Expected finite features and a final label column")
+    shuffled = raw[np.random.default_rng(seed).permutation(len(raw))]
+    n_train = int(split[0] * len(raw))
+    n_val = int(split[1] * len(raw))
+    if min(n_train, n_val, len(raw) - n_train - n_val) &lt; 1:
+        raise ValueError("Each split must contain at least one row")
+    train, val, test = np.split(shuffled, [n_train, n_train + n_val])
+    minimum = train[:, :-1].min(axis=0)
+    span = train[:, :-1].max(axis=0) - minimum
+    X_train, X_val, X_test = [scalify_min_max(part[:, :-1], minimum, span) for part in (train, val, test)]
+    Y_train, Y_val, Y_test = [part[:, -1:].copy() for part in (train, val, test)]
+    if not np.isin(shuffled[:, -1], [0, 1]).all():
+        raise ValueError("This example expects binary 0/1 targets")
+    return X_train, X_val, X_test, Y_train, Y_val, Y_test</code></pre>
 
 
 
@@ -108,16 +113,25 @@ def dataprep(fileloc,split):
 
 
 
-<p class="wp-block-paragraph">For for finding accuracy of learned model on the test dataset.</p>
+<p class="wp-block-paragraph">Logistic classification thresholds sigmoid probabilities, while linear classification thresholds the linear prediction. The loss is binary cross-entropy for logistic regression and mean squared error divided by two for linear regression. Specify the model explicitly when evaluating it.</p>
 
 
 
-<pre class="wp-block-code"><code>def evaluate(theta_params,X,Y=None,thresh=0.5):
-    data_size=X.shape&#091;0]
-    X_extend=np.concatenate((np.ones((data_size,1)),X),axis=1)
-    pred = np.greater(np.matmul(X_extend,theta_params),thresh)*1
-    cost=np.sum(np.square(np.matmul(X_extend,theta_params)-Y))/(data_size*2)
-    return pred,cost</code></pre>
+<pre class="wp-block-code"><code>def evaluate(theta_params, X, Y=None, thresh=0.5, model="logistic"):
+    if model not in ("linear", "logistic"):
+        raise ValueError("model must be linear or logistic")
+    X = np.asarray(X, dtype=np.float64)
+    X_extend = np.column_stack([np.ones(len(X)), X])
+    scores = X_extend @ np.asarray(theta_params).reshape(-1, 1)
+    values = sigmoid(scores) if model == "logistic" else scores
+    prediction = (values &gt;= thresh).astype(np.int64)
+    if Y is None:
+        return prediction, None
+    truth = np.asarray(Y).reshape(-1, 1)
+    if truth.shape != prediction.shape:
+        raise ValueError("Label count differs from prediction count")
+    loss = np.mean(np.logaddexp(0, scores) - truth * scores) if model == "logistic" else np.mean((scores - truth) ** 2) / 2
+    return prediction, float(loss)</code></pre>
 
 
 
@@ -125,27 +139,38 @@ def dataprep(fileloc,split):
 
 
 
-<pre class="wp-block-code"><code>def sigmoid_func(theta,X):
-    retval = 1/(1+np.exp(-1*np.matmul(theta.T,X)))
-    return retval
-    
-def logistic_regression(X,Y,learning_rate=0.001,num_iters=100,thresh=0.5,rand_seed=None):
-    if rand_seed!=None:#For reproducible results
-        np.random.seed(rand_seed)
-    data_size = X.shape&#091;0]
-    theta_params=np.array(&#091;np.random.randn(X.shape&#091;1]+1)]).T
-    #Add bias column to X
-    X_extend = np.concatenate((np.ones((data_size,1)),X),axis=1).T
-    cost=&#091;]#Keep track of cost after each iteration of learning
-    for i in tqdm(range(num_iters),desc="Training.."):
-        h_theta=sigmoid_func(theta_params,X_extend).T#mX1
-        grad=np.matmul(X_extend,(h_theta-Y))/data_size#nXm*mX1=nX1
-        theta_params=theta_params-learning_rate*grad
-        cost.append(-1*np.sum(Y*np.log(h_theta)+(1-Y)*np.log(1-h_theta))/(data_size))
-    final_pred = np.greater(np.matmul(X_extend.T,theta_params),thresh)*1
-    accuracy=np.sum(np.logical_not(np.logical_xor(final_pred,Y)))/data_size
-    cost=np.array(cost)
-    return theta_params,accuracy,cost</code></pre>
+<pre class="wp-block-code"><code>def sigmoid(scores):
+    scores = np.asarray(scores, dtype=np.float64)
+    result = np.empty_like(scores)
+    positive = scores &gt;= 0
+    result[positive] = 1 / (1 + np.exp(-scores[positive]))
+    exp_scores = np.exp(scores[~positive])
+    result[~positive] = exp_scores / (1 + exp_scores)
+    return result
+
+def _fit(X, Y, learning_rate, num_iters, thresh, rand_seed, model):
+    X = np.asarray(X, dtype=np.float64)
+    Y = np.asarray(Y, dtype=np.float64).reshape(-1, 1)
+    if X.ndim != 2 or len(X) != len(Y) or not len(X):
+        raise ValueError("Expected a nonempty feature matrix and matching labels")
+    if not np.isfinite(X).all() or not np.isin(Y, [0, 1]).all():
+        raise ValueError("Expected finite features and binary targets")
+    if learning_rate &lt;= 0 or num_iters &lt; 1:
+        raise ValueError("Use a positive learning rate and iteration count")
+    X_extend = np.column_stack([np.ones(len(X)), X])
+    theta = np.random.default_rng(rand_seed).normal(0, 0.01, (X_extend.shape[1], 1))
+    costs = []
+    for _ in range(num_iters):
+        scores = X_extend @ theta
+        hypothesis = sigmoid(scores) if model == "logistic" else scores
+        theta -= learning_rate * (X_extend.T @ (hypothesis - Y)) / len(X)
+        _, cost = evaluate(theta, X, Y, thresh, model)
+        costs.append(cost)
+    prediction, _ = evaluate(theta, X, Y, thresh, model)
+    return theta, accuracy_calculator(prediction, Y)[0], np.asarray(costs)
+
+def logistic_regression(X, Y, learning_rate=0.001, num_iters=100, thresh=0.5, rand_seed=0):
+    return _fit(X, Y, learning_rate, num_iters, thresh, rand_seed, "logistic")</code></pre>
 
 
 
@@ -153,21 +178,8 @@ def logistic_regression(X,Y,learning_rate=0.001,num_iters=100,thresh=0.5,rand_se
 
 
 
-<pre class="wp-block-code"><code>def linear_regression(X,Y,learning_rate=0.001,num_iters=100,thresh=0.5,rand_seed=None):
-    if rand_seed!=None:
-        np.random.seed(rand_seed)
-    data_size = X.shape&#091;0]
-    #print(X.shape,Y.shape)
-    theta_params=np.array(&#091;np.random.randn(X.shape&#091;1]+1)]).T
-    X_extend = np.concatenate((np.ones((data_size,1)),X),axis=1)
-    cost=&#091;]
-    for i in tqdm(range(num_iters),desc="Training.."):
-        theta_params=theta_params-learning_rate*np.matmul((np.matmul(theta_params.T,X_extend.T)-Y.T),X_extend).T/data_size
-        cost.append(np.sum(np.square(np.matmul(X_extend,theta_params)-Y)&#091;0])/(data_size*2))
-    final_pred = np.greater(np.matmul(X_extend,theta_params),thresh)*1
-    accuracy=np.sum(np.logical_not(np.logical_xor(final_pred,Y)))/data_size
-    cost=np.array(cost)
-    return theta_params,accuracy,cost</code></pre>
+<pre class="wp-block-code"><code>def linear_regression(X, Y, learning_rate=0.001, num_iters=100, thresh=0.5, rand_seed=0):
+    return _fit(X, Y, learning_rate, num_iters, thresh, rand_seed, "linear")</code></pre>
 
 
 
@@ -175,75 +187,26 @@ def logistic_regression(X,Y,learning_rate=0.001,num_iters=100,thresh=0.5,rand_se
 
 
 
-<pre class="wp-block-code"><code>#######################--------Linear RUNNER---------###############################
-def regression_runner(fileloc,data_split_ratios,seed_values):
-    X_train,X_val,X_test,Y_train,Y_val,Y_test = dataprep(fileloc,data_split_ratios)
-    all_models=&#091;]
-    all_val_accuracies=&#091;]
-    random_seeds=seed_values
-    num_iters=500
-    x_axis=np.arange(num_iters)
-    for i in range(len(random_seeds)):
-        model,train_accuracy,cost=linear_regression(X_train,Y_train,rand_seed=random_seeds&#091;i],num_iters=num_iters)
-        print("Trial:",i,".Train Accuracy:",train_accuracy)
-        all_models.append(model)
-        plt.plot(x_axis,cost,label=str(random_seeds&#091;i]))
-        
-        val_prediction,val_cost=evaluate(model,X_val,Y_val)
-        accuracy_precision=accuracy_calculator(val_prediction,Y_val)
-        all_val_accuracies.append(accuracy_precision&#091;0])
-        print("Validation Accuracy:",accuracy_precision)
-        print("Validation Cost:",val_cost)
-
-    #plt.legend()
-    plt.title("Linear Regression")
-    plt.xlabel('Number of iterations')
-    plt.ylabel('Cost')
-    plt.show()
-    max_accuracy_idx=np.where(all_val_accuracies==np.amax(all_val_accuracies))&#091;0]&#091;0]
-    best_model=all_models&#091;max_accuracy_idx]
-    print(best_model.shape)
-    #print(X_test.shape,Y_test.shape)
-    test_pred,test_cost=evaluate(best_model,X_test,Y_test)
-    print(test_pred.shape,print(test_cost))
-    test_accuracy,test_precision,test_recall,test_f1=accuracy_calculator(test_pred,Y_test)
-    print("Test accuracy:",test_accuracy,".Test cost:",test_cost)
-
-#####################-------------LOGISTIC RUNNER--------------##########################
-def logistic_runner(fileloc,data_split_ratios,seed_values):
-    X_train,X_val,X_test,Y_train,Y_val,Y_test = dataprep(fileloc,data_split_ratios)
-    all_models=&#091;]
-    all_val_accuracies=&#091;]
-    random_seeds=seed_values
-    num_iters=1500
-    x_axis=np.arange(num_iters)
-    for i in range(10):
-        model,train_accuracy,cost=logistic_regression(X_train,Y_train,rand_seed=random_seeds&#091;i],num_iters=num_iters)
-        print("Trial:",i,".Train Accuracy:",train_accuracy)
-        all_models.append(model)
-        plt.plot(x_axis,cost,label=str(random_seeds&#091;i]))
-
-        val_prediction,val_cost=evaluate(model,X_val,Y_val)
-        accuracy_precision=accuracy_calculator(val_prediction,Y_val)
-        all_val_accuracies.append(accuracy_precision&#091;0])
-        print("Validation Accuracy:",accuracy_precision)
-        print("Validation Cost:",val_cost)
-    #plt.legend()
-    plt.title("Logistic Regression")
-    plt.xlabel('Number of iterations')
-    plt.ylabel('Cost')
-    plt.show()
-    max_accuracy_idx=np.where(all_val_accuracies==np.amax(all_val_accuracies))&#091;0]&#091;0]
-    best_model=all_models&#091;max_accuracy_idx]
-
-    test_pred,test_cost=evaluate(best_model,X_test,Y_test)
-    #print(test_pred.shape,print(test_cost))
-    test_accuracy,test_precision,test_recall,test_f1=accuracy_calculator(test_pred,Y_test)
-    print("Test accuracy:",test_accuracy,".Test cost:",test_cost)</code></pre>
+<pre class="wp-block-code"><code>def run_models(fileloc, data_split_ratios, seed_values, model="logistic", num_iters=500):
+    seed_values = list(seed_values)
+    if model not in ("linear", "logistic") or not seed_values:
+        raise ValueError("Choose a model and at least one initialization seed")
+    X_train, X_val, X_test, Y_train, Y_val, Y_test = dataprep(fileloc, data_split_ratios)
+    fit = logistic_regression if model == "logistic" else linear_regression
+    candidates, validation_scores = [], []
+    for seed in seed_values:
+        theta, _, _ = fit(X_train, Y_train, rand_seed=seed, num_iters=num_iters)
+        predictions, _ = evaluate(theta, X_val, Y_val, model=model)
+        candidates.append(theta)
+        validation_scores.append(accuracy_calculator(predictions, Y_val)[0])
+    # Choose on validation data. Evaluate the selected model on the test set once.
+    selected = candidates[int(np.argmax(validation_scores))]
+    predictions, loss = evaluate(selected, X_test, Y_test, model=model)
+    return selected, accuracy_calculator(predictions, Y_test), loss</code></pre>
 
 
 
-<h2 class="wp-block-heading">Training Curves</h2>
+<h2 class="wp-block-heading">Original 2021 Training Curves</h2>
 
 
 
@@ -259,7 +222,7 @@ def logistic_runner(fileloc,data_split_ratios,seed_values):
 
 
 
-<h2 class="wp-block-heading">Test Accuracies</h2>
+<h2 class="wp-block-heading">Original 2021 Test Output</h2>
 
 
 
@@ -275,17 +238,8 @@ Test accuracy: 0.646551724137931 .Test cost: 0.2865915372479961</code></pre>
 
 
 
-<p class="wp-block-paragraph"><a href="https://gist.github.com/cd09e245ffaf64eaf780ab346b2d0599.git">Gist Link</a></p>
+<p><a href="/examples/numpy_tutorials.py">Current tested source</a></p>
 
 
 
-<h2 class="wp-block-heading">Additional Notes</h2>
-
-
-
-<ul class="wp-block-list"><li>The above code does not use regularization.</li><li>It may appear that for a few curves training was stopped prematurely, but infact the test results were more near optimal for the above training parameters.</li><li>Although linear regression appears to be performing better for the above case it might give poorer results for other datasets.</li><li>Note that logistic regression took 3X as many iterations as linear regression to converge.</li><li>Initial model parameters are chosen randomly by varying the seed values. Initial model parameters(theta) effects the overall training performance, hence 10 such values were taken.</li></ul>
-
-
-
-<p class="wp-block-paragraph"></p>
-
+<h2>Additional Notes</h2><ul><li>The example does not use regularization or missing-value imputation.</li><li>Select parameters using validation data, then evaluate the selected model on held-out test data.</li><li>Squared loss and cross-entropy have different meanings; their raw values are not directly comparable.</li><li>The archived plots do not establish that one algorithm is better. A new comparison needs the corrected pipeline and a consistent evaluation protocol.</li></ul>
