@@ -45,7 +45,8 @@ array(&#091;&#091;12],
 
 
 
-<pre class="wp-block-code"><code>&gt;&gt;&gt; one_hot(Y)
+<pre class="wp-block-code"><code>&gt;&gt;&gt; encoded, classes = one_hot(Y)
+&gt;&gt;&gt; encoded
 array(&#091;&#091;0., 0., 0., 0., 0., 0., 1.],
        &#091;0., 0., 0., 1., 0., 0., 0.],
        &#091;0., 0., 1., 0., 0., 0., 0.],
