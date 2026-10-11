@@ -41,7 +41,7 @@ function bridge(kit: SceneKit, parent: THREE.Object3D, a: {x:number;z:number}, b
 }
 
 function signboard(kit:SceneKit,g:THREE.Object3D,d:WorldDestination,y:number) {
-  const width=Math.min(4.9,d.width+.85),height=1.42,z=d.depth/2+.60;
+  const width=Math.min(5.15,d.width+.95),height=1.55,z=d.depth/2+.60;
   const board=new THREE.Mesh(kit.geometry(`board:${width}`,()=>new THREE.BoxGeometry(width,height,.18)),new THREE.MeshBasicMaterial({color:'#263e45',toneMapped:false}));
   board.position.set(0,y,z);g.add(board);
   for(const side of [-1,1])kit.box(g,[.08,.09,.6],[side*width*.36,y+.2,z-.3],'frame');
@@ -49,8 +49,8 @@ function signboard(kit:SceneKit,g:THREE.Object3D,d:WorldDestination,y:number) {
   const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=320;
   const ctx=canvas.getContext('2d')!;ctx.fillStyle='#f7f8f1';ctx.textAlign='center';ctx.textBaseline='middle';
   const lines:Record<string,string[]>={robotics:['ROBOTICS','LAB'],vision:['VISION','OBSERVATORY'],maker:['MAKER','WORKSHOP'],journal:['ENGINEERING','JOURNAL'],research:['RESEARCH','PAVILION'],studio:['PROFILE','& CONTACT']};
-  ctx.font='800 112px sans-serif';ctx.fillText(lines[d.id][0],512,105,970);
-  ctx.font='700 88px sans-serif';ctx.fillText(lines[d.id][1],512,237,970);
+  ctx.font='800 128px sans-serif';ctx.fillText(lines[d.id][0],512,105,970);
+  ctx.font='700 102px sans-serif';ctx.fillText(lines[d.id][1],512,237,970);
   const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;kit.trackedTextures.add(texture);
   const text=new THREE.Mesh(kit.geometry(`sign-plane:${width}`,()=>new THREE.PlaneGeometry(width-.12,height-.08)),new THREE.MeshBasicMaterial({map:texture,transparent:true,toneMapped:false,depthWrite:false}));
   text.position.set(0,y,z+.095);g.add(text);
@@ -153,17 +153,17 @@ function careerMonument(kit: SceneKit, parent: THREE.Object3D, id: string, x:num
   kit.cylinder(g,1.08,.22,[0,.35,-.2],'stone');
   kit.box(g,[.45,.95,.4],[0,.9,-.2],'metal');
   const round=id==='jio'||id==='iitb';
-  const face=new THREE.Mesh(round?kit.geometry(`career-disc:${id}`,()=>new THREE.CylinderGeometry(1.3,1.3,.24,40)):kit.geometry('sem-board',()=>new THREE.BoxGeometry(3.85,1.8,.24)),new THREE.MeshBasicMaterial({color:'#f7f8f1',toneMapped:false}));
+  const face=new THREE.Mesh(round?kit.geometry(`career-disc:${id}`,()=>new THREE.CylinderGeometry(1.5,1.5,.24,40)):kit.geometry('sem-board',()=>new THREE.BoxGeometry(4.45,2.05,.24)),new THREE.MeshBasicMaterial({color:'#f7f8f1',toneMapped:false}));
   face.position.set(0,2.03,-.2);if(round)face.rotation.x=Math.PI/2;g.add(face);
-  if(round){const rim=kit.cylinder(g,1.36,.12,[0,2.03,-.27],'accent',data.color,40);rim.rotation.x=Math.PI/2;}
-  else kit.box(g,[3.93,.09,.3],[0,2.97,-.2],'accent',data.color);
+  if(round){const rim=kit.cylinder(g,1.56,.12,[0,2.03,-.27],'accent',data.color,40);rim.rotation.x=Math.PI/2;}
+  else kit.box(g,[4.53,.09,.3],[0,3.10,-.2],'accent',data.color);
   // Rasterize SVG through the browser image loader, preserving its masks and full
   // Electro-Mechanics wordmark. SVGLoader's geometry ignores those clipping masks.
   new THREE.TextureLoader().load(data.logo,texture=>{
     if(kit.disposed){texture.dispose();return;}
     texture.colorSpace=THREE.SRGBColorSpace;kit.trackedTextures.add(texture);
     const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,side:THREE.DoubleSide,toneMapped:false});
-    let width=round?2.15:3.55,height=round?2.15:width/(texture.image.width/texture.image.height);
+    let width=round?2.55:4.15,height=round?2.55:width/(texture.image.width/texture.image.height);
     if(id==='iitb')height=width*texture.image.height/106;
     const geometry=new THREE.PlaneGeometry(width,height);
     if(id==='iitb'){
@@ -174,8 +174,8 @@ function careerMonument(kit: SceneKit, parent: THREE.Object3D, id: string, x:num
     const picture=new THREE.Mesh(geometry,material);picture.position.set(0,2.04,-.055);g.add(picture);
   },undefined,()=>{});
   tree(kit,g,-1.55,-.8,.72);lamp(kit,g,1.65,.65);
-  const proxy=new THREE.Mesh(new THREE.BoxGeometry(3.2,3.1,1.4),new THREE.MeshBasicMaterial({visible:false}));
-  proxy.position.set(0,1.55,-.2);proxy.userData={kind:'career',id};g.add(proxy);return proxy;
+  const proxy=new THREE.Mesh(new THREE.BoxGeometry(round?3.3:4.6,3.7,1.4),new THREE.MeshBasicMaterial({visible:false}));
+  proxy.position.set(0,1.85,-.2);proxy.userData={kind:'career',id};g.add(proxy);return proxy;
 }
 
 export function createEnvironment(kit: SceneKit): WorldScene {
