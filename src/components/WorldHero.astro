@@ -7,7 +7,8 @@ import { career } from '../data/career';
   <div class="world-frame" data-world-stage data-world-state="loading">
     <div class="city-backdrop" aria-hidden="true"></div>
     <img class="world-poster" src="/world/campus-poster.svg" alt="An illustrated floating campus connecting robotics, vision, making and writing" />
-    <canvas tabindex="0" aria-label="Interactive campus. Arrow keys move in four isometric directions. Click a building or walk into its entrance to visit. Scroll to continue down the page." aria-describedby="world-controls-help"></canvas>
+    <canvas tabindex="0" aria-label="Interactive campus. Drag inside the map or use arrow keys to move in four isometric directions. Tap a building or walk into its entrance to visit. Scroll outside the map to continue down the page." aria-describedby="world-controls-help"></canvas>
+    <svg class="world-drag-control" data-drag-control data-active="false" aria-hidden="true" viewBox="0 0 104 104"><circle cx="52" cy="52" r="24"/><path data-drag-line d="M52 52L52 52"/><circle data-drag-thumb cx="52" cy="52" r="6"/></svg>
     <div class="world-markers">
       {destinations.map(d => <a class="world-marker" data-landmark={d.id} href={d.href} aria-label={`Enter ${d.label}`}><span class="sr-only">{d.label}</span></a>)}
       {careerStops.map(stop => <button class="world-marker" aria-label={`${career.find(c=>c.id===stop.id)?.name} career stop`} data-landmark={stop.id} data-career-stop={stop.id}></button>)}

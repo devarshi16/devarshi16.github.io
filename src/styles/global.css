@@ -10,6 +10,13 @@
 [data-theme=dark] .hero{background:radial-gradient(ellipse at 50% 40%,#34495477,transparent 68%)}
 .world-frame{position:absolute;inset:12px 2vw calc(88px + var(--annotation-height,0px))}
 .world-frame canvas{width:100%;height:100%;display:block;touch-action:pan-y;outline-offset:-9px;position:relative;z-index:1}
+.world-frame[data-world-state=ready]{user-select:none}
+.world-frame[data-world-state=ready] canvas,.world-frame[data-world-state=ready] .world-marker,.world-frame[data-world-state=ready] .avatar-marker{touch-action:none}
+.world-frame[data-dragging=true] canvas{cursor:grabbing!important}
+.world-drag-control{position:absolute;width:104px;height:104px;transform:translate(-50%,-50%);z-index:4;pointer-events:none;overflow:visible;color:var(--accent)}
+.world-drag-control[data-active=false]{display:none}
+.world-drag-control circle,.world-drag-control path{stroke:currentColor;stroke-width:1.5;fill:none;opacity:.65}
+.world-drag-control [data-drag-thumb]{fill:var(--surface);stroke-width:2;opacity:.9}
 .city-backdrop{position:absolute;inset:-3% -4%;background:url('/world/city-backdrop.webp') center 66%/cover no-repeat;opacity:.48;filter:saturate(.6);mask-image:radial-gradient(ellipse at 50% 58%,#000 45%,#000d 68%,transparent 100%);pointer-events:none}
 [data-theme=dark] .city-backdrop{opacity:.25;filter:saturate(.45) brightness(.75)}
 .world-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.65}
@@ -57,10 +64,10 @@
   .city-backdrop{background-position:center;opacity:.4}
   .world-marker{width:44px;height:44px}
   .avatar-marker{width:44px;height:54px}
-  .world-toolbar{left:20px;right:auto;bottom:28px;transform:none;text-align:left;max-width:calc(100% - 130px)}
-  .world-key-hint{font-size:0;display:block}.world-key-hint:after{content:'TAP A BUILDING TO ENTER';font-size:.5rem;letter-spacing:.08em}
+  .world-toolbar{left:20px;right:20px;bottom:28px;transform:none;text-align:left;width:auto;max-width:none}
+  .world-key-hint{font-size:0;display:block}.world-key-hint:after{content:'DRAG TO WANDER · TAP TO ENTER';font-size:.5rem;letter-spacing:.08em}
   .world-toolbar-buttons{justify-content:flex-start;gap:0;margin-left:-8px}.quiet-button{font-size:.61rem}
-  .direction-pad{bottom:24px;right:18px}.direction-pad button{height:40px;width:40px}
+  .direction-pad{display:none}
   .scroll-cue{bottom:91px;left:22px;font-size:.48rem}.scroll-cue span{height:26px;width:26px}
   .world-callout{padding:18px 21px;width:285px;max-height:calc(100% - 40px);overflow:auto}
   .world-callout h2{font-size:1.3rem}.world-callout p:not(.eyebrow){font-size:.71rem}

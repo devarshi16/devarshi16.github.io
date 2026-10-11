@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { destinations, doorFor, arrival, bridges } from '../src/data/world';
 import { enteredDoor, moveOnGround, isOnGround, isInsideBuilding, isometricInput } from '../src/world/movement';
 import { drawingOutline, overlapsDrawing, nearbyIndicator } from '../src/world/callouts';
+import { dragInput, DRAG_DEAD_ZONE } from '../src/world/drag';
 import { canPublish, previewAllowed, slugify, articleUrl } from '../src/lib/content-policy';
 import { splitFrontmatter, renderLegacyMarkdown, convertLiquid, plainText } from '../src/lib/legacy-loader';
 
@@ -33,6 +34,24 @@ test('input permits only the four world-axis isometric directions',()=>{
     const v=isometricInput(x,z);assert.equal(Math.hypot(v.x,v.z),1);assert.ok(v.x===0||v.z===0);
   }
   assert.deepEqual(isometricInput(0,0),{x:0,z:0});
+});
+test('map dragging follows screen-space isometric directions and ignores tap-sized movement',()=>{
+  assert.deepEqual(dragInput(-60,-35),{x:-1,z:0});
+  assert.deepEqual(dragInput(60,-35),{x:0,z:-1});
+  assert.deepEqual(dragInput(-60,35),{x:0,z:1});
+  assert.deepEqual(dragInput(60,35),{x:1,z:0});
+  assert.deepEqual(dragInput(0,0),{x:0,z:0});
+  assert.deepEqual(dragInput(DRAG_DEAD_ZONE,0),{x:0,z:0});
+  assert.deepEqual(dragInput(4,5,{x:1,z:0}),{x:0,z:0});
+  for(let angle=0;angle<Math.PI*2;angle+=.05){
+    const input=dragInput(Math.cos(angle)*80,Math.sin(angle)*80);
+    assert.equal(Math.hypot(input.x,input.z),1);assert.ok(input.x===0||input.z===0);
+  }
+});
+test('a held drag is stable at direction seams and can change direction deliberately',()=>{
+  assert.deepEqual(dragInput(60,2,{x:0,z:-1}),{x:0,z:-1});
+  assert.deepEqual(dragInput(60,30,{x:0,z:-1}),{x:1,z:0});
+  assert.deepEqual(dragInput(60,-30,{x:1,z:0}),{x:0,z:-1});
 });
 test('approaching an entrance previews its indicator before crossing the doorway',()=>{
   assert.equal(nearbyIndicator(arrival),'samsung');

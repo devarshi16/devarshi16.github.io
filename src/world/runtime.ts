@@ -7,6 +7,7 @@ import { SceneKit } from './geometry';
 import { sceneThemes, type ThemeName } from './theme';
 import { isometricInput, moveOnGround, enteredDoor, isOnGround, isInsideBuilding } from './movement';
 import { drawingOutline, overlapsDrawing, nearbyIndicator, type DrawingPoint } from './callouts';
+import { dragInput, DRAG_DEAD_ZONE } from './drag';
 
 const STORAGE_KEY='portfolio-world-grid-v2';
 const MOVEMENT_KEYS=new Set(['w','a','s','d','arrowup','arrowleft','arrowdown','arrowright']);
@@ -23,6 +24,9 @@ export function mountWorld(stage:HTMLElement): () => void {
   const leader=stage.querySelector<SVGSVGElement>('[data-callout-leader]')!;
   const leaderPath=leader.querySelector<SVGPathElement>('[data-callout-path]')!;
   const avatarMarker=stage.querySelector<HTMLButtonElement>('[data-avatar-marker]')!;
+  const dragControl=stage.querySelector<SVGSVGElement>('[data-drag-control]')!;
+  const dragLine=dragControl.querySelector<SVGPathElement>('[data-drag-line]')!;
+  const dragThumb=dragControl.querySelector<SVGCircleElement>('[data-drag-thumb]')!;
   const motion=window.matchMedia('(prefers-reduced-motion: reduce)');
   const listeners=new AbortController(), signal=listeners.signal;
   let renderer:THREE.WebGLRenderer;
@@ -38,7 +42,8 @@ export function mountWorld(stage:HTMLElement): () => void {
   sun.shadow.normalBias=.06;sun.shadow.bias=-.0003;scene.add(sun);
   const fill=new THREE.HemisphereLight('#e8f2f1','#98a495',2.4);scene.add(fill);
   let point:Point={...arrival}, angle=0, visible=true, lost=false, disposed=false, navigating=false;
-  let paused=motion.matches, raf:number|null=null, lastTime=0, elapsed=0, pointerDown:Point|undefined;
+  let paused=motion.matches, raf:number|null=null, lastTime=0, elapsed=0;
+  let gesture:{id:number;x:number;y:number;moved:boolean}|null=null, dragDirection:Point={x:0,z:0}, suppressMapClick=false;
   let labelsDirty=true, fpsStarted=0, frameCount=0, totalFrames=0;
   let annotation:{id:string;persistent:boolean}|null=null, returnFocus:HTMLElement|null=null;
   let annotationLayout:{key:string;side:'left'|'right'|null;left:number;top:number}|null=null;
@@ -66,7 +71,12 @@ export function mountWorld(stage:HTMLElement): () => void {
   projectedVertices.length=0;
   function save(){try{sessionStorage.setItem(STORAGE_KEY,JSON.stringify(point));}catch{}}
   function queue(){if(raf===null&&visible&&!document.hidden&&!lost&&!disposed)raf=requestAnimationFrame(frame);}
-  function clearKeys(){keys.clear();queue();}
+  function finishDrag(){
+    const ended=gesture;gesture=null;dragDirection={x:0,z:0};dragControl.dataset.active='false';stage.dataset.dragging='false';
+    if(ended&&stage.hasPointerCapture(ended.id))stage.releasePointerCapture(ended.id);
+    queue();
+  }
+  function clearKeys(){keys.clear();finishDrag();}
   function project(p:{x:number;y:number;z:number}) {
     const v=new THREE.Vector3(p.x,p.y,p.z).project(camera);
     return {x:(v.x*.5+.5)*stage.clientWidth,y:(-v.y*.5+.5)*stage.clientHeight,visible:Math.abs(v.x)<1.03&&Math.abs(v.y)<1.03};
@@ -175,7 +185,7 @@ export function mountWorld(stage:HTMLElement): () => void {
     const dt=Math.min(.04,lastTime?(now-lastTime)/1000:.016);lastTime=now;elapsed+=dt;
     const key=[...keys].at(-1),horizontal=key==='d'||key==='arrowright'?1:key==='a'||key==='arrowleft'?-1:0;
     const vertical=key==='s'||key==='arrowdown'?1:key==='w'||key==='arrowup'?-1:0;
-    const input=isometricInput(horizontal,vertical),previous=point;
+    const input=gesture?.moved?dragDirection:isometricInput(horizontal,vertical),previous=point;
     point=moveOnGround(point,{x:input.x*3.6*dt,z:input.z*3.6*dt});
     const moving=Math.hypot(point.x-previous.x,point.z-previous.z)>.00001;
     if(moving)angle=Math.atan2(point.x-previous.x,point.z-previous.z);
@@ -189,10 +199,10 @@ export function mountWorld(stage:HTMLElement): () => void {
     if(annotation)positionAnnotation();renderer.render(scene,camera);stage.dataset.frames=String(++totalFrames);
     frameCount++;if(now-fpsStarted>=1000){stage.dataset.fps=String(Math.round(frameCount*1000/(now-fpsStarted)));fpsStarted=now;frameCount=0;}
     stage.dataset.triangles=String(renderer.info.render.triangles);stage.dataset.drawCalls=String(renderer.info.render.calls);
-    if(keys.size||(!paused&&!motion.matches))queue();
+    if(keys.size||dragDirection.x||dragDirection.z||(!paused&&!motion.matches))queue();
   }
   // Immediately available from page load. Focused navigation/form controls retain
-  // their native keys; wheel and touch scrolling never pass through this handler.
+  // their native keys; scrolling outside the map never passes through this handler.
   document.addEventListener('keydown',event=>{
     if(event.key==='Escape'){clearKeys();dismissAnnotation(true);canvas.blur();return;}
     const key=event.key.toLowerCase(),active=document.activeElement;
@@ -202,19 +212,54 @@ export function mountWorld(stage:HTMLElement): () => void {
     event.preventDefault();keys.add(key);queue();
   },{signal});
   document.addEventListener('keyup',event=>{keys.delete(event.key.toLowerCase());queue();},{signal});
-  document.addEventListener('focusin',event=>{if(event.target!==canvas)clearKeys();},{signal});
+  document.addEventListener('focusin',event=>{if(event.target!==canvas&&!(gesture&&stage.contains(event.target as Node)))clearKeys();},{signal});
   window.addEventListener('blur',clearKeys,{signal});
   function pick(event:PointerEvent){
     const rect=canvas.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);
     raycaster.setFromCamera(pointer,camera);return raycaster.intersectObjects(environment.pickables,false)[0];
   }
-  canvas.addEventListener('pointerdown',event=>{pointerDown={x:event.clientX,z:event.clientY};},{signal});
-  canvas.addEventListener('pointerup',event=>{
-    if(!pointerDown||Math.hypot(pointerDown.x-event.clientX,pointerDown.z-event.clientY)>8)return;
-    const hit=pick(event);if(hit){const {kind,id}=hit.object.userData;if(kind==='page')navigate(id);else showAnnotation(id,true);}
-    else dismissAnnotation();pointerDown=undefined;
+  stage.addEventListener('pointerdown',event=>{
+    if(!event.isPrimary||event.button!==0||gesture||lost||navigating||stage.dataset.worldState!=='ready')return;
+    if((event.target as Element).closest('[data-world-callout]'))return;
+    keys.clear();suppressMapClick=false;gesture={id:event.pointerId,x:event.clientX,y:event.clientY,moved:false};
+  },{signal,capture:true});
+  stage.addEventListener('dragstart',event=>{
+    if(!(event.target as Element).closest('[data-world-callout]'))event.preventDefault();
   },{signal});
-  canvas.addEventListener('pointermove',event=>{canvas.style.cursor=pick(event)?'pointer':'default';},{signal});
+  window.addEventListener('pointermove',event=>{
+    if(!gesture||gesture.id!==event.pointerId)return;
+    const dx=event.clientX-gesture.x,dy=event.clientY-gesture.y,length=Math.hypot(dx,dy);
+    if(!gesture.moved&&length>DRAG_DEAD_ZONE){
+      gesture.moved=true;suppressMapClick=true;
+      if(annotation?.persistent)closeAnnotation();
+      canvas.focus({preventScroll:true});stage.setPointerCapture(event.pointerId);
+      const rect=stage.getBoundingClientRect();dragControl.style.left=`${gesture.x-rect.left}px`;dragControl.style.top=`${gesture.y-rect.top}px`;
+      dragControl.dataset.active='true';stage.dataset.dragging='true';
+    }
+    if(!gesture.moved)return;
+    event.preventDefault();dragDirection=dragInput(dx,dy,dragDirection);
+    const scale=length?Math.min(length,38)/length:0,x=52+dx*scale,y=52+dy*scale;
+    dragLine.setAttribute('d',`M52 52L${x} ${y}`);dragThumb.setAttribute('cx',String(x));dragThumb.setAttribute('cy',String(y));queue();
+  },{signal,passive:false});
+  window.addEventListener('pointerup',event=>{
+    if(!gesture||gesture.id!==event.pointerId)return;
+    const tap=!gesture.moved&&Math.hypot(event.clientX-gesture.x,event.clientY-gesture.y)<=DRAG_DEAD_ZONE;
+    finishDrag();
+    // Native marker taps keep their links/buttons. Only the canvas needs raycasting.
+    if(!tap||event.target!==canvas)return;
+    const hit=pick(event);if(hit){const {kind,id}=hit.object.userData;if(kind==='page')navigate(id);else showAnnotation(id,true);}
+    else dismissAnnotation();
+  },{signal});
+  for(const type of ['pointercancel','lostpointercapture'])window.addEventListener(type,event=>{
+    // Touch starts with implicit capture on its original target. Transferring
+    // capture from a marker to the map must not cancel the active drag.
+    if(type==='lostpointercapture'&&event.target!==stage)return;
+    if(gesture?.id===(event as PointerEvent).pointerId)finishDrag();
+  },{signal});
+  stage.addEventListener('click',event=>{
+    if(suppressMapClick&&event.detail>0){event.preventDefault();event.stopImmediatePropagation();suppressMapClick=false;}
+  },{signal,capture:true});
+  canvas.addEventListener('pointermove',event=>{if(!gesture?.moved&&event.pointerType==='mouse')canvas.style.cursor=pick(event)?'pointer':'default';},{signal});
   stage.querySelectorAll<HTMLButtonElement>('[data-career-stop]').forEach(button=>button.addEventListener('click',()=>showAnnotation(button.dataset.careerStop!,true,eventIsKeyboard()),{signal}));
   function eventIsKeyboard(){return document.activeElement?.matches(':focus-visible')??false;}
   function hoverIndicator(id:string){if(annotation?.persistent)return;clearTimeout(hoverTimer);hoveredIndicator=id;syncAnnotation();}
@@ -248,7 +293,7 @@ export function mountWorld(stage:HTMLElement): () => void {
   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(stage);
   const visibility=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(!visible&&raf!==null){cancelAnimationFrame(raf);raf=null;clearKeys();}else{lastTime=0;queue();}},{rootMargin:'50px'});visibility.observe(stage);
   theme();resize();stage.dataset.worldState='ready';pause.setAttribute('aria-pressed',String(paused));pause.textContent=paused?'Resume motion':'Pause motion';
-  stage.dataset.loadMs=String(Math.round(performance.now()-loadingStarted));status.textContent='Arrow keys move in four isometric directions. Enter a doorway or select a building. Scroll for more.';
+  stage.dataset.loadMs=String(Math.round(performance.now()-loadingStarted));status.textContent='Drag inside the map or use arrow keys to move in four isometric directions. Tap a building or enter its doorway. Scroll outside the map for more.';
   window.addEventListener('pageshow',()=>{navigating=false;queue();},{signal});
   function dispose(){
     if(disposed)return;disposed=true;save();clearTimeout(hoverTimer);listeners.abort();if(raf!==null)cancelAnimationFrame(raf);
