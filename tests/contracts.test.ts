@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { destinations, doorFor, arrival } from '../src/data/world';
 import { enteredDoor, moveOnGround, isOnGround, isInsideBuilding, cameraRelativeInput } from '../src/world/movement';
 import { canPublish, previewAllowed, slugify, articleUrl } from '../src/lib/content-policy';
-import { splitFrontmatter, renderLegacyMarkdown, convertLiquid } from '../src/lib/legacy-loader';
+import { splitFrontmatter, renderLegacyMarkdown, convertLiquid, plainText } from '../src/lib/legacy-loader';
 
 test('draft previews are never enabled in a production build',()=>{
   assert.equal(previewAllowed('production',true),false);
@@ -48,6 +48,10 @@ test('raw HTML headings get stable TOC targets and active scripts are excluded',
   const result=renderLegacyMarkdown('<h2>First heading</h2><h2>First heading</h2><script>alert(1)</script><img src="/assets/a.png" srcset="/assets/a.png 100w, /assets/a.png 500w">');
   assert.deepEqual(result.headings.map(h=>h.slug),['first-heading','first-heading-1']);
   assert.match(result.html,/id="first-heading-1"/);assert.ok(!result.html.includes('<script'));assert.ok(!result.html.includes('srcset'));
+});
+test('imported metadata entities display as readable plain text',()=>{
+  assert.equal(plainText('you&#8217;re &amp; <b>curious</b>'),'you’re & curious');
+  assert.equal(plainText('&#x2014; &quot;notes&quot;'),'— "notes"');
 });
 test('relative iframe and video survive the content renderer',()=>{
   const {html}=renderLegacyMarkdown('<iframe title="IK" src="/assets/teleoperation/ik-2d.html"></iframe><video controls><source src="/assets/teleoperation/a.mp4" type="video/mp4"></video>');

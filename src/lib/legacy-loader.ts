@@ -6,6 +6,15 @@ import sanitizeHtml from 'sanitize-html';
 import type { Loader } from 'astro/loaders';
 import { slugify } from './content-policy';
 
+export function plainText(value: string): string {
+  const stripped=sanitizeHtml(value,{allowedTags:[],allowedAttributes:{}});
+  const entities:Record<string,string>={quot:'"',apos:"'",lt:'<',gt:'>',nbsp:' ',amp:'&'};
+  return stripped.replace(/&#(x[0-9a-f]+|\d+);/gi,(entity,code)=>{
+    const point=Number.parseInt(code.replace(/^x/i,''),/^x/i.test(code)?16:10);
+    return point<=0x10ffff?String.fromCodePoint(point):entity;
+  }).replace(/&(quot|apos|lt|gt|nbsp|amp);/g,(entity,name)=>entities[name]??entity);
+}
+
 export function splitFrontmatter(source: string): { data: Record<string, unknown>; body: string } {
   const match = source.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n|$)/);
   if (!match) throw new Error('Expected YAML frontmatter');
@@ -32,7 +41,7 @@ export function renderLegacyMarkdown(body: string): { html: string; headings: { 
   const headings: { depth: number; slug: string; text: string }[] = [];
   const used = new Map<string, number>();
   const withHeadings = html.replace(/<h([1-6])([^>]*)>([\s\S]*?)<\/h\1>/g, (_, depth, attributes, inner) => {
-    const text = inner.replace(/<[^>]*>/g, '').replace(/&#8211;/g, '–').replace(/&amp;/g, '&');
+    const text = plainText(inner);
     const base = slugify(text) || 'section';
     const count = used.get(base) ?? 0;
     used.set(base, count + 1);
@@ -85,7 +94,8 @@ export function legacyLoader(directory: string, type: 'blogs' | 'books'): Loader
             : tags.some(tag => /arduino|electronics|raspberry|gamepad/i.test(tag)) ? 'Hardware'
             : tags.some(tag => /regression|one hot|one-hot/i.test(tag)) ? 'Vision & ML' : 'Computing';
           const data = await context.parseData({ id, filePath, data: {
-            ...original, tags: [...new Set(tags.map(slugify))], category,
+            ...original, title: plainText(String(original.title ?? '')), description: plainText(String(original.description ?? '')),
+            tags: [...new Set(tags.map(slugify))], category,
             published: original.published !== false,
             readingMinutes: Math.max(1, Math.ceil(body.replace(/<[^>]*>/g, ' ').split(/\s+/).length / 220)),
           } });
