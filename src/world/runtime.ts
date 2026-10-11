@@ -6,6 +6,7 @@ import { createAvatar } from './avatar';
 import { SceneKit } from './geometry';
 import { sceneThemes, type ThemeName } from './theme';
 import { isometricInput, moveOnGround, enteredDoor, isOnGround, isInsideBuilding } from './movement';
+import { drawingOutline, overlapsDrawing, nearbyIndicator, type DrawingPoint } from './callouts';
 
 const STORAGE_KEY='portfolio-world-grid-v2';
 const MOVEMENT_KEYS=new Set(['w','a','s','d','arrowup','arrowleft','arrowdown','arrowright']);
@@ -40,6 +41,8 @@ export function mountWorld(stage:HTMLElement): () => void {
   let paused=motion.matches, raf:number|null=null, lastTime=0, elapsed=0, pointerDown:Point|undefined;
   let labelsDirty=true, fpsStarted=0, frameCount=0, totalFrames=0;
   let annotation:{id:string;persistent:boolean}|null=null, returnFocus:HTMLElement|null=null;
+  let annotationLayout:{key:string;side:'left'|'right'|null;left:number;top:number}|null=null;
+  let nearIndicator:string|null=null, dismissedIndicator:string|null=null, hoveredIndicator:string|null=null, panelHovered=false;
   let hoverTimer:ReturnType<typeof setTimeout>|undefined;
   const keys=new Set<string>(), raycaster=new THREE.Raycaster(), pointer=new THREE.Vector2();
   try {
@@ -49,13 +52,18 @@ export function mountWorld(stage:HTMLElement): () => void {
   // Measure actual projected vertices once, so portrait screens fit the complete
   // campus rather than clipping its outer islands or long rock bases.
   camera.updateMatrixWorld();environment.root.updateMatrixWorld(true);
-  const viewBounds=new THREE.Box3(), vertex=new THREE.Vector3();
+  const viewBounds=new THREE.Box3(), vertex=new THREE.Vector3(),projectedVertices:DrawingPoint[]=[];
   environment.root.traverse(object=>{
     if(!(object instanceof THREE.Mesh))return;
     const positions=object.geometry.getAttribute('position');
-    for(let i=0;i<positions.count;i++)viewBounds.expandByPoint(vertex.fromBufferAttribute(positions,i).applyMatrix4(object.matrixWorld).applyMatrix4(camera.matrixWorldInverse));
+    for(let i=0;i<positions.count;i++){
+      vertex.fromBufferAttribute(positions,i).applyMatrix4(object.matrixWorld).applyMatrix4(camera.matrixWorldInverse);
+      viewBounds.expandByPoint(vertex);projectedVertices.push({x:vertex.x,y:vertex.y});
+    }
   });
   const viewSize=viewBounds.getSize(new THREE.Vector3()),viewCenter=viewBounds.getCenter(new THREE.Vector3());
+  const campusOutline=drawingOutline(projectedVertices);
+  projectedVertices.length=0;
   function save(){try{sessionStorage.setItem(STORAGE_KEY,JSON.stringify(point));}catch{}}
   function queue(){if(raf===null&&visible&&!document.hidden&&!lost&&!disposed)raf=requestAnimationFrame(frame);}
   function clearKeys(){keys.clear();queue();}
@@ -68,27 +76,65 @@ export function mountWorld(stage:HTMLElement): () => void {
     avatarMarker.setAttribute('aria-expanded','false');
     if(restore)returnFocus?.focus({preventScroll:true});queue();
   }
+  function dismissAnnotation(restore=false) {
+    dismissedIndicator=nearIndicator;hoveredIndicator=null;panelHovered=false;closeAnnotation(restore);
+  }
+  function syncAnnotation() {
+    if(annotation?.persistent)return;
+    const id=hoveredIndicator??(panelHovered?annotation?.id:null)??(nearIndicator!==dismissedIndicator?nearIndicator:null);
+    if(id){if(annotation?.id!==id)showAnnotation(id,false);}
+    else if(annotation)closeAnnotation();
+  }
+  function updateProximity() {
+    const next=nearbyIndicator(point,nearIndicator);
+    if(next!==nearIndicator){
+      nearIndicator=next;dismissedIndicator=null;
+      stage.dataset.nearIndicator=next??'';
+      stage.querySelectorAll<HTMLElement>('[data-landmark]').forEach(marker=>{marker.dataset.near=String(marker.dataset.landmark===next);});
+    }
+    syncAnnotation();
+  }
   function positionAnnotation() {
     if(!annotation)return;
     const stop=careerStops.find(s=>s.id===annotation!.id),destination=destinations.find(d=>d.id===annotation!.id);
     const anchor=project(stop?{...stop.position,y:2.9}:destination?{x:destination.position.x,z:destination.position.z+destination.depth/2+.29,y:1.14}:{...point,y:1.65});
     const width=stage.clientWidth,height=stage.clientHeight,pw=panel.offsetWidth,ph=panel.offsetHeight;
-    const mobile=window.innerWidth<760;
-    const left=mobile?(width-pw)/2:anchor.x>width/2?16:width-pw-16;
-    // A phone gets an annotation below the drawing, rather than a card covering
-    // the entire campus. Its leader still points back to the selected object.
-    const top=mobile?height+12:Math.max(16,Math.min(height-ph-16,anchor.y-ph*.5));
-    hero.style.setProperty('--annotation-height',mobile?`${ph+28}px`:'0px');
-    panel.style.left=`${Math.max(14,left)}px`;panel.style.top=`${Math.max(14,top)}px`;
+    const layoutKey=`${annotation.id}:${width}:${height}:${pw}:${ph}`;
+    if(annotationLayout?.key!==layoutKey){
+      const outline=campusOutline.map(p=>({x:(p.x-camera.left)/(camera.right-camera.left)*width,y:(camera.top-p.y)/(camera.top-camera.bottom)*height}));
+      let side:'left'|'right'|null=null,left=(width-pw)/2,top=height+24;
+      // Look for clear space beside the actual silhouette, including its rock bases.
+      // Narrow screens reserve space below; the scene never shrinks or jumps.
+      if(window.innerWidth>=760&&ph<height-28){
+        const sides:('left'|'right')[]=anchor.x<width/2?['left','right']:['right','left'];
+        const preferred=Math.max(14,Math.min(height-ph-14,anchor.y-ph*.5+56));
+        const rows=[preferred,height-ph-14,14];
+        for(let y=14;y<=height-ph-14;y+=24)rows.push(y);
+        for(const candidate of sides){
+          const x=candidate==='left'?14:width-pw-14;
+          const y=rows.find(y=>!overlapsDrawing({left:x,top:y,width:pw,height:ph},outline));
+          if(y!==undefined){side=candidate;left=x;top=y;break;}
+        }
+      }
+      annotationLayout={key:layoutKey,side,left,top};
+    }
+    const {side,left,top}=annotationLayout;
+    hero.style.setProperty('--annotation-height',side?'0px':`${ph+32}px`);
+    panel.dataset.placement=side??'below';
+    panel.style.left=`${Math.max(14,left)}px`;panel.style.top=`${top}px`;
     leader.setAttribute('viewBox',`0 0 ${width} ${height}`);
-    const startX=mobile?Math.max(left+20,Math.min(left+pw-20,anchor.x)):anchor.x>width/2?left+pw:left;
-    const startY=mobile?top>anchor.y?top:top+ph:Math.max(top+24,Math.min(top+ph-24,anchor.y));
-    const elbowX=mobile?startX:(startX+anchor.x)/2,elbowY=mobile?(startY+anchor.y)/2:startY;
-    leaderPath.setAttribute('d',`M ${startX} ${startY} L ${elbowX} ${elbowY} L ${anchor.x} ${anchor.y}`);
+    const attachLeft=side?side==='right':anchor.x<width/2;
+    const startX=side?attachLeft?left:left+pw:attachLeft?left+24:left+pw-24;
+    const startY=side?top+ph*.5:top;
+    const elbowX=side?startX+(attachLeft?-48:48):Math.max(14,Math.min(width-14,startX+(attachLeft?-48:48)));
+    // From the indicator: one diagonal leg, one bend, then a horizontal shelf.
+    // The arrowhead points back at the object, as in an engineering drawing.
+    leaderPath.setAttribute('d',`M ${startX} ${startY} L ${elbowX} ${startY} L ${anchor.x} ${anchor.y}`);
   }
   function showAnnotation(id:string,persistent=true,focus=false) {
     clearTimeout(hoverTimer);
     const item=career.find(c=>c.id===id),destination=destinations.find(d=>d.id===id),profile=id==='avatar';if(!profile&&!item&&!destination)return;
+    panel.dataset.brief=String(!persistent&&!profile);
     panel.querySelector('[data-callout-eyebrow]')!.textContent=profile?'THE ENGINEER':destination?'CAMPUS DESTINATION':'A STOP ALONG THE WAY';
     panel.querySelector('[data-callout-name]')!.textContent=profile?'Devarshi Aggarwal':destination?.label??item!.name;
     panel.querySelector('[data-callout-role]')!.textContent=profile?'Robotics & Physical AI · Samsung Electro-Mechanics':destination?.caption??`${item!.role} · ${item!.dates}`;
@@ -96,7 +142,7 @@ export function mountWorld(stage:HTMLElement): () => void {
     const link=panel.querySelector<HTMLAnchorElement>('[data-callout-link]')!;link.href=profile?'/about/':destination?.href??item!.link;link.textContent=profile?'About me ↗':destination?'Enter this building ↗':'Explore related work ↗';
     panel.querySelector<HTMLElement>('[data-callout-cv]')!.hidden=!profile;
     returnFocus=focus?document.activeElement as HTMLElement:canvas;annotation={id,persistent};panel.hidden=false;leader.dataset.active='true';
-    avatarMarker.setAttribute('aria-expanded',String(profile));clearKeys();positionAnnotation();
+    avatarMarker.setAttribute('aria-expanded',String(profile));if(persistent)clearKeys();positionAnnotation();
     if(window.innerWidth<760&&persistent)panel.scrollIntoView({block:'nearest',behavior:motion.matches?'instant':'smooth'});
     if(focus)close.focus({preventScroll:true});queue();
   }
@@ -132,7 +178,8 @@ export function mountWorld(stage:HTMLElement): () => void {
     const input=isometricInput(horizontal,vertical),previous=point;
     point=moveOnGround(point,{x:input.x*3.6*dt,z:input.z*3.6*dt});
     const moving=Math.hypot(point.x-previous.x,point.z-previous.z)>.00001;
-    if(moving){angle=Math.atan2(point.x-previous.x,point.z-previous.z);if(annotation)closeAnnotation();}
+    if(moving)angle=Math.atan2(point.x-previous.x,point.z-previous.z);
+    updateProximity();
     avatar.root.position.set(point.x,.28,point.z);avatar.root.rotation.y=angle;avatar.update(elapsed,moving,!paused&&!motion.matches);
     stage.dataset.avatarX=point.x.toFixed(2);stage.dataset.avatarZ=point.z.toFixed(2);
     const destination=enteredDoor(previous,point);if(destination){point=previous;navigate(destination);}
@@ -147,10 +194,10 @@ export function mountWorld(stage:HTMLElement): () => void {
   // Immediately available from page load. Focused navigation/form controls retain
   // their native keys; wheel and touch scrolling never pass through this handler.
   document.addEventListener('keydown',event=>{
-    if(event.key==='Escape'){clearKeys();closeAnnotation(true);canvas.blur();return;}
+    if(event.key==='Escape'){clearKeys();dismissAnnotation(true);canvas.blur();return;}
     const key=event.key.toLowerCase(),active=document.activeElement;
     const stageRect=stage.getBoundingClientRect(),inView=visible&&stageRect.top<window.innerHeight*.5&&stageRect.bottom>window.innerHeight*.35;
-    if(!MOVEMENT_KEYS.has(key)||!inView||annotation||event.altKey||event.ctrlKey||event.metaKey)return;
+    if(!MOVEMENT_KEYS.has(key)||!inView||annotation?.persistent||event.altKey||event.ctrlKey||event.metaKey)return;
     if(active&&active!==document.body&&active!==canvas&&!active.hasAttribute('data-direction'))return;
     event.preventDefault();keys.add(key);queue();
   },{signal});
@@ -165,28 +212,30 @@ export function mountWorld(stage:HTMLElement): () => void {
   canvas.addEventListener('pointerup',event=>{
     if(!pointerDown||Math.hypot(pointerDown.x-event.clientX,pointerDown.z-event.clientY)>8)return;
     const hit=pick(event);if(hit){const {kind,id}=hit.object.userData;if(kind==='page')navigate(id);else showAnnotation(id,true);}
-    else closeAnnotation();pointerDown=undefined;
+    else dismissAnnotation();pointerDown=undefined;
   },{signal});
   canvas.addEventListener('pointermove',event=>{canvas.style.cursor=pick(event)?'pointer':'default';},{signal});
   stage.querySelectorAll<HTMLButtonElement>('[data-career-stop]').forEach(button=>button.addEventListener('click',()=>showAnnotation(button.dataset.careerStop!,true,eventIsKeyboard()),{signal}));
   function eventIsKeyboard(){return document.activeElement?.matches(':focus-visible')??false;}
-  avatarMarker.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse'&&!annotation?.persistent)showAnnotation('avatar',false);},{signal});
-  function scheduleClose(){if(annotation&&!annotation.persistent)hoverTimer=setTimeout(()=>closeAnnotation(),250);}
+  function hoverIndicator(id:string){if(annotation?.persistent)return;clearTimeout(hoverTimer);hoveredIndicator=id;syncAnnotation();}
+  avatarMarker.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse')hoverIndicator('avatar');},{signal});
+  function scheduleClose(){clearTimeout(hoverTimer);hoverTimer=setTimeout(()=>{hoveredIndicator=null;syncAnnotation();},250);}
   stage.querySelectorAll<HTMLElement>('[data-landmark]').forEach(marker=>{
-    marker.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse'&&!annotation?.persistent)showAnnotation(marker.dataset.landmark!,false);},{signal});
+    marker.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse')hoverIndicator(marker.dataset.landmark!);},{signal});
     marker.addEventListener('pointerleave',scheduleClose,{signal});
-    marker.addEventListener('focus',()=>{if(!annotation?.persistent&&marker.matches(':focus-visible'))showAnnotation(marker.dataset.landmark!,false);},{signal});
+    marker.addEventListener('focus',()=>{if(marker.matches(':focus-visible'))hoverIndicator(marker.dataset.landmark!);},{signal});
     marker.addEventListener('blur',scheduleClose,{signal});
   });
   avatarMarker.addEventListener('pointerleave',scheduleClose,{signal});
   avatarMarker.addEventListener('click',()=>showAnnotation('avatar',true,eventIsKeyboard()),{signal});
-  panel.addEventListener('pointerenter',()=>clearTimeout(hoverTimer),{signal});panel.addEventListener('pointerleave',scheduleClose,{signal});
-  close.addEventListener('click',()=>closeAnnotation(true),{signal});
+  panel.addEventListener('pointerenter',()=>{clearTimeout(hoverTimer);panelHovered=true;},{signal});
+  panel.addEventListener('pointerleave',()=>{panelHovered=false;scheduleClose();},{signal});
+  close.addEventListener('click',()=>dismissAnnotation(true),{signal});
   pause.addEventListener('click',()=>{paused=!paused;pause.setAttribute('aria-pressed',String(paused));pause.textContent=paused?'Resume motion':'Pause motion';queue();},{signal});
-  reset.addEventListener('click',()=>{point={...arrival};clearKeys();closeAnnotation();save();canvas.focus({preventScroll:true});queue();},{signal});
+  reset.addEventListener('click',()=>{point={...arrival};nearIndicator=null;dismissedIndicator=null;hoveredIndicator=null;panelHovered=false;clearKeys();closeAnnotation();save();canvas.focus({preventScroll:true});queue();},{signal});
   document.querySelectorAll<HTMLButtonElement>('[data-direction]').forEach(button=>{
     const key=button.dataset.direction!;
-    button.addEventListener('pointerdown',event=>{event.preventDefault();closeAnnotation();button.setPointerCapture(event.pointerId);keys.add(key);queue();},{signal});
+    button.addEventListener('pointerdown',event=>{event.preventDefault();if(annotation?.persistent)closeAnnotation();button.setPointerCapture(event.pointerId);keys.add(key);queue();},{signal});
     for(const event of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(event,()=>{keys.delete(key);queue();},{signal});
     button.addEventListener('keydown',event=>{if(event.key===' '||event.key==='Enter'){event.preventDefault();keys.add(key);queue();}},{signal});
     button.addEventListener('keyup',event=>{if(event.key===' '||event.key==='Enter'){keys.delete(key);queue();}},{signal});

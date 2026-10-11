@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { destinations, doorFor, arrival, bridges } from '../src/data/world';
 import { enteredDoor, moveOnGround, isOnGround, isInsideBuilding, isometricInput } from '../src/world/movement';
+import { drawingOutline, overlapsDrawing, nearbyIndicator } from '../src/world/callouts';
 import { canPublish, previewAllowed, slugify, articleUrl } from '../src/lib/content-policy';
 import { splitFrontmatter, renderLegacyMarkdown, convertLiquid, plainText } from '../src/lib/legacy-loader';
 
@@ -32,6 +33,28 @@ test('input permits only the four world-axis isometric directions',()=>{
     const v=isometricInput(x,z);assert.equal(Math.hypot(v.x,v.z),1);assert.ok(v.x===0||v.z===0);
   }
   assert.deepEqual(isometricInput(0,0),{x:0,z:0});
+});
+test('approaching an entrance previews its indicator before crossing the doorway',()=>{
+  assert.equal(nearbyIndicator(arrival),'samsung');
+  for(const destination of destinations){
+    const door=doorFor(destination),approach={x:door.x,z:door.z+1.2};
+    assert.equal(nearbyIndicator(approach),destination.id);
+    assert.equal(enteredDoor(approach,moveOnGround(approach,{x:0,z:-.06})),undefined);
+  }
+});
+test('proximity callouts stay steady at the boundary and release when walking away',()=>{
+  assert.equal(nearbyIndicator({x:8,z:-8.5}),null);
+  assert.equal(nearbyIndicator({x:8,z:-8.5},'samsung'),'samsung');
+  assert.equal(nearbyIndicator({x:8,z:-8},'samsung'),null);
+  assert.equal(nearbyIndicator({x:0,z:-9.5},'samsung'),'jio');
+});
+test('callout placement uses the island silhouette and includes its full interior',()=>{
+  const outline=drawingOutline([{x:50,y:0},{x:100,y:50},{x:50,y:100},{x:0,y:50},{x:50,y:50}]);
+  assert.equal(overlapsDrawing({left:80,top:80,width:20,height:20},outline,0),false);
+  assert.equal(overlapsDrawing({left:60,top:60,width:20,height:20},outline,0),true);
+  assert.equal(overlapsDrawing({left:40,top:40,width:10,height:10},outline,0),true);
+  assert.equal(overlapsDrawing({left:-10,top:-10,width:120,height:120},outline,0),true);
+  assert.equal(overlapsDrawing({left:80,top:80,width:20,height:20},outline,16),true);
 });
 test('Samsung spawn and every door connect through orthogonal avenues',()=>{
   assert.deepEqual(arrival,{x:8,z:-9.5});
