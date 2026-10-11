@@ -1,7 +1,7 @@
 Devarshi's floating robotics portfolio
 =====================================
 
-The feature branch runs an Astro static site with a direct Three.js campus. The original Jekyll Markdown directories remain the content source and rollback baseline; the new build does not require Ruby.
+The portfolio runs an Astro static site with a direct Three.js campus. The original Jekyll Markdown directories remain the content source and rollback baseline; the new build does not require Ruby.
 
 Use Node 22.12 or newer:
 
@@ -19,11 +19,13 @@ python3 -m unittest tests/test_numpy_tutorials.py
 npm run build
 ```
 
-The Python tutorial checks require NumPy. The application itself requires only the Node dependencies. The production build verifies original article, book and tag routes, draft exclusion, and static entry points. `dist/` is the deployment artifact. GitHub Pages publishing settings have not been changed and this branch has not been deployed.
+The Python tutorial checks require NumPy. The application itself requires only the Node dependencies. The production build verifies original article, book and tag routes, draft exclusion, and static entry points. `dist/` is the deployment artifact.
+
+**Publishing uses GitHub Actions.** The [Pages workflow](.github/workflows/deploy-pages.yml) checks, tests and builds commits pushed to `gh-pages`, then publishes only `dist/` to [the portfolio](https://devarshi16.github.io/). The repository's Pages source must be set to **GitHub Actions**; the legacy Jekyll branch build cannot build this version. Merge completed feature branches into `gh-pages` and push that branch to release updates. Generated output, local QA screenshots and working notes are not included in the deployed artifact.
 
 **The world has two navigation paths.** Select a building or move with the arrow keys immediately after load. Movement follows four isometric world axes (one direction at a time); crossing a front doorway opens the same page as its link. Fresh sessions start at Samsung, and Back restores the previous position. Wheel/touch scrolling remains available. Focused links and form controls retain their native keys. Escape clears held input and closes annotations. Career monuments and the avatar reveal offset annotations with engineering leader lines. Mobile users can use the four-direction touch pad or tap the buildings/white interaction dots.
 
-**Journal covers use real article imagery.** Asset preparation creates 640 × 360 WebP derivatives from each article's thumbnail, preserving originals. The SO-101 teleoperation walkthrough is included as published content in this feature branch, with its videos, IK example and diagrams. No remote publication has occurred.
+**Journal covers use real article imagery.** Asset preparation creates 640 × 360 WebP derivatives from each article's thumbnail, preserving originals. The SO-101 teleoperation walkthrough is included as published content, with its videos, IK examples and diagrams.
 
 **Drafts remain private to local preview.**
 
