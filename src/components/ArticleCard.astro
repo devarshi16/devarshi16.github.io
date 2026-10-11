@@ -1,0 +1,20 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { articleUrl } from '../lib/content-policy';
+interface Props { post: CollectionEntry<'blogs'>; index?: number; }
+const { post, index = 0 } = Astro.props;
+const shortDescriptions: Record<string,string> = {
+  'diy-wired-arduino-pro-micro-gamepad': 'From a PCB and a Pro Micro to a working USB gamepad. The build, the firmware, and the things I learned.',
+  'diy-raspberry-pi-power-hat': 'Making a small power board for the Raspberry Pi, with the practical details of the build.',
+  'fast-one-hot-encoding-using-numpy-no-for-loops': 'Thinking in arrays: vectorized label encoding, class mappings, and the cost of dense representations.',
+  'linear-vs-logistic-numpy': 'Implementing two familiar learning algorithms from scratch, and understanding the evaluation pipeline.',
+};
+---
+<a class="article-card" href={articleUrl(post.id)} data-category={post.data.category} data-search={`${post.data.title} ${post.data.tags.join(' ')} ${post.data.description}`}>
+  <div class={`article-art art-${index%3}`}>
+    {post.data.thumbnail && <img src={post.data.cardImage ?? post.data.thumbnail} alt="" loading="lazy" width="640" height="360" />}
+    <span>{post.data.category}</span><i aria-hidden="true">↗</i>
+  </div>
+  <div class="article-meta"><time datetime={post.data.date.toISOString()}>{post.data.date.toLocaleDateString('en-GB',{month:'short',year:'numeric',timeZone:'UTC'})}</time><span>{post.data.readingMinutes} min read</span>{!post.data.published&&<span class="draft-badge">Local draft</span>}</div>
+  <h3>{post.data.title}</h3><p>{shortDescriptions[post.id]??post.data.description.replace(/\[\.\.\.\]/g,'').slice(0,160)}</p>
+</a>

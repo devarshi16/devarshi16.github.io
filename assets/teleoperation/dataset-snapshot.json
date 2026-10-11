@@ -1,0 +1,147 @@
+{
+  "collected_date": "2026-10-04",
+  "inspected_date": "2026-10-11",
+  "datasets": {
+    "gamepad": {
+      "source": "outputs/comparison/gamepad/episodes.hdf5",
+      "metadata": {
+        "physics_dt": 0.008333333333333333,
+        "decimation": 2,
+        "camera_size": 256,
+        "record_rgb": true,
+        "software": {
+          "isaacsim": "6.1.0.0",
+          "isaacteleop": "1.4.98rc1"
+        },
+        "action_layout": "xyz,quat_xyzw,jaw_closedness",
+        "recording_policy": "success_only"
+      },
+      "episodes": [
+        {
+          "episode": "demo_0",
+          "num_samples": 3328,
+          "seed": 101,
+          "success": true,
+          "termination_reason": "success",
+          "wall_time_s": 101.27078201499535,
+          "simulation_time_s": 55.46666666666667
+        },
+        {
+          "episode": "demo_1",
+          "num_samples": 2226,
+          "seed": 107,
+          "success": true,
+          "termination_reason": "success",
+          "wall_time_s": 82.7904819309988,
+          "simulation_time_s": 37.1
+        }
+      ],
+      "total_frames": 5554
+    },
+    "quest": {
+      "source": "outputs/comparison/quest/episodes.hdf5",
+      "metadata": {
+        "physics_dt": 0.008333333333333333,
+        "decimation": 2,
+        "camera_size": 256,
+        "record_rgb": true,
+        "software": {
+          "isaacsim": "6.1.0.0",
+          "isaacteleop": "1.4.98rc1"
+        },
+        "action_layout": "xyz,quat_xyzw,jaw_closedness",
+        "recording_policy": "success_only"
+      },
+      "episodes": [
+        {
+          "episode": "demo_0",
+          "num_samples": 564,
+          "seed": 121,
+          "success": true,
+          "termination_reason": "success",
+          "wall_time_s": 27.33593334899342,
+          "simulation_time_s": 9.4
+        },
+        {
+          "episode": "demo_1",
+          "num_samples": 309,
+          "seed": 123,
+          "success": true,
+          "termination_reason": "success",
+          "wall_time_s": 15.47942095000326,
+          "simulation_time_s": 5.15
+        },
+        {
+          "episode": "demo_2",
+          "num_samples": 1069,
+          "seed": 126,
+          "success": true,
+          "termination_reason": "success",
+          "wall_time_s": 40.12899549100257,
+          "simulation_time_s": 17.816666666666666
+        },
+        {
+          "episode": "demo_3",
+          "num_samples": 283,
+          "seed": 131,
+          "success": true,
+          "termination_reason": "success",
+          "wall_time_s": 14.173586274999252,
+          "simulation_time_s": 4.716666666666667
+        }
+      ],
+      "total_frames": 2225
+    }
+  },
+  "preview": {
+    "source": "outputs/comparison/quest/episodes.hdf5",
+    "episode": "demo_0",
+    "playback_clock": "simulation",
+    "fps": 60,
+    "camera_order": [
+      "overhead",
+      "wrist"
+    ]
+  },
+  "sample": {
+    "source_episode": "quest/demo_0",
+    "frame_index": 100,
+    "simulation_timestamp_s": 1.6666666666666667,
+    "observation.wall_time_s": 4.808691806996649,
+    "observation.state": [
+      0.40428999066352844,
+      0.5188000202178955,
+      0.5627899765968323,
+      -1.6009800434112549,
+      -1.995419979095459,
+      -0.14630000293254852
+    ],
+    "action": [
+      0.4036099910736084,
+      0.5065799951553345,
+      0.5543699860572815,
+      -1.6077899932861328,
+      -1.9818799495697021,
+      -0.14650000631809235
+    ],
+    "cartesian_teleop_action": [
+      -0.07412999868392944,
+      -0.24487000703811646,
+      0.14768999814987183,
+      -0.006380000151693821,
+      0.9599800109863281,
+      0.2592099905014038,
+      0.1058799996972084,
+      0.0
+    ],
+    "joint_names": [
+      "Rotation",
+      "Pitch",
+      "Elbow",
+      "Wrist_Pitch",
+      "Wrist_Roll",
+      "Jaw"
+    ],
+    "joint_units": "radians"
+  }
+}

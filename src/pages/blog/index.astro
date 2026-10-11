@@ -1,0 +1,16 @@
+---
+import Base from '../../layouts/Base.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import { visibleArticles } from '../../lib/content';
+const posts=await visibleArticles();
+---
+<Base title="Engineering Journal — Devarshi Aggarwal"><section class="page-intro"><p class="eyebrow">FIELD NOTES & WORKBENCH EXPERIMENTS</p><h1>The engineering <em>journal.</em></h1><p>Things I’ve built, questions I’ve chased, and the details that made a difference.</p></section><section class="section blog-list"><div class="blog-controls"><div class="filter-buttons" aria-label="Article category">{['All technical','Robotics','Vision & ML','Hardware','Computing','Personal writing'].map((category,index)=><button data-category-filter={category} aria-pressed={index===0}>{category}</button>)}</div><label class="search-label"><span class="sr-only">Search articles</span><input type="search" placeholder="Find a note…" data-article-search /></label></div><div class="article-grid" data-article-list>{posts.map((post,index)=><ArticleCard post={post} index={index}/>)}</div><p class="empty-state" data-no-results hidden>No notes match that search. Try another phrase or category.</p></section></Base>
+<script>
+  let category='All technical';const search=document.querySelector<HTMLInputElement>('[data-article-search]')!;
+  const cards=[...document.querySelectorAll<HTMLElement>('[data-article-list] .article-card')];
+  function filter(){let count=0;for(const card of cards){const match=category==='All technical'?card.dataset.category!=='Personal writing':card.dataset.category===category;
+    card.hidden=!match||!card.dataset.search!.toLowerCase().includes(search.value.toLowerCase());if(!card.hidden)count++;}
+    document.querySelector<HTMLElement>('[data-no-results]')!.hidden=count!==0;}
+  document.querySelectorAll<HTMLButtonElement>('[data-category-filter]').forEach(button=>button.addEventListener('click',()=>{category=button.dataset.categoryFilter!;document.querySelectorAll('[data-category-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));filter();}));
+  search.addEventListener('input',filter);filter();
+</script>

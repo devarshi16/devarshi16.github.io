@@ -1,0 +1,5 @@
+---
+import { readFile } from 'node:fs/promises';
+const document = await readFile('assets/teleoperation/ik-2d.html','utf8');
+---
+<Fragment set:html={document} />

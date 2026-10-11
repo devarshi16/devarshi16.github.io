@@ -1,0 +1,40 @@
+---
+import { destinations, careerStops } from '../data/world';
+import { career } from '../data/career';
+---
+<section class="hero" aria-labelledby="hero-heading">
+  <h1 id="hero-heading" class="sr-only">Devarshi Aggarwal’s interactive robotics portfolio</h1>
+  <div class="world-frame" data-world-stage data-world-state="loading">
+    <div class="city-backdrop" aria-hidden="true"></div>
+    <img class="world-poster" src="/world/campus-poster.svg" alt="An illustrated floating campus connecting robotics, vision, making and writing" />
+    <canvas tabindex="0" aria-label="Interactive campus. Arrow keys move in four isometric directions. Click a building or walk into its entrance to visit. Scroll to continue down the page." aria-describedby="world-controls-help"></canvas>
+    <div class="world-markers">
+      {destinations.map(d => <a class="world-marker" data-landmark={d.id} href={d.href} aria-label={`Enter ${d.label}`}><span class="sr-only">{d.label}</span></a>)}
+      {careerStops.map(stop => <button class="world-marker" aria-label={`${career.find(c=>c.id===stop.id)?.name} career stop`} data-landmark={stop.id} data-career-stop={stop.id}></button>)}
+      <button class="avatar-marker" data-avatar-marker aria-label="Meet Devarshi Aggarwal" aria-expanded="false" aria-controls="world-callout"></button>
+    </div>
+    <svg class="callout-leader" data-callout-leader data-active="false" aria-hidden="true"><defs><marker id="callout-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L7 4L1 7"/></marker></defs><path data-callout-path marker-end="url(#callout-arrow)"/></svg>
+    <aside id="world-callout" class="world-callout" data-world-callout aria-labelledby="callout-name" hidden>
+      <button class="close-panel" data-close-callout aria-label="Close annotation">×</button>
+      <p class="eyebrow" data-callout-eyebrow></p><h2 id="callout-name" data-callout-name></h2>
+      <p class="career-role" data-callout-role></p><p data-callout-copy></p>
+      <div class="callout-links"><a class="text-link" data-callout-link href="/about/">About me ↗</a><a class="text-link" data-callout-cv href="/assets/Devarshi_Aggarwal_CV.pdf" hidden>Download CV ↓</a></div>
+    </aside>
+  </div>
+  <div class="world-toolbar"><span class="world-key-hint" aria-hidden="true">ARROW KEYS TO WANDER · CLICK TO ENTER</span><div class="world-toolbar-buttons"><button class="quiet-button" data-pause-world aria-pressed="false">Pause motion</button><button class="quiet-button" data-reset-world>Return to Samsung</button></div></div>
+  <p id="world-controls-help" class="sr-only" data-world-status role="status">Preparing the campus. Every destination is available in the directory below.</p>
+  <div class="direction-pad" aria-label="Avatar direction controls"><div><button data-direction="arrowleft" aria-label="Walk northwest">↖</button><button data-direction="arrowup" aria-label="Walk northeast">↗</button></div><div><button data-direction="arrowdown" aria-label="Walk southwest">↙</button><button data-direction="arrowright" aria-label="Walk southeast">↘</button></div></div>
+  <a class="scroll-cue" href="#selected-work"><span>↓</span> MORE BELOW</a>
+</section>
+<details class="campus-directory"><summary>Campus directory <span>All destinations ↗</span></summary><div>{destinations.map(d=><a href={d.href}><strong>{d.label}</strong><span>{d.caption}</span></a>)}{career.map(c=><a href={`/about/#${c.id}`}><strong>{c.name}</strong><span>{c.role}</span></a>)}</div></details>
+<script>
+  const stage=document.querySelector<HTMLElement>('[data-world-stage]');
+  if(stage) {
+    const observer=new IntersectionObserver(async entries=>{
+      if(!entries.some(entry=>entry.isIntersecting))return;
+      observer.disconnect();
+      try { const {mountWorld}=await import('../world/runtime');mountWorld(stage); }
+      catch {stage.dataset.worldState='fallback';document.querySelector('[data-world-status]')!.textContent='Use the campus directory to explore every destination.';}
+    },{rootMargin:'150px'});observer.observe(stage);
+  }
+</script>

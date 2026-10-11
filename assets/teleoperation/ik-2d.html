@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Two-link inverse kinematics playground</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/assets/teleoperation/ik-2d.css">
+  <script src="/assets/teleoperation/ik-2d.js" defer></script>
+  <script src="/assets/teleoperation/embed-theme.js" defer></script>
+</head>
+<body>
+<main class="ik-demo">
+  <header><p class="eyebrow">FROM HAND POSITION TO JOINT ANGLES</p><h1>Let the arm find the target.</h1><p>Drag the crosshair, or enter X and Y. Watch two joint angles solve one position.</p></header>
+  <div class="demo-grid">
+    <section class="workspace" aria-label="Arm workspace">
+      <svg id="arm-view" viewBox="0 0 500 500" role="img" aria-labelledby="arm-title arm-desc">
+        <title id="arm-title">Interactive two-link arm</title>
+        <desc id="arm-desc">A shoulder and elbow reach for a target in a circular workspace. Use the labeled target inputs to change it with a keyboard.</desc>
+        <defs><pattern id="grid" width="25" height="25" patternUnits="userSpaceOnUse"><path d="M 25 0 L 0 0 0 25" fill="none" stroke="#dfe6ef" stroke-width="0.8"/></pattern></defs>
+        <rect width="500" height="500" fill="url(#grid)"/>
+        <circle cx="250" cy="250" r="198" class="reach"/>
+        <circle cx="250" cy="250" r="22" class="inner-reach"/>
+        <path d="M 18 250 H 482 M 250 18 V 482" class="axes"/>
+        <text x="471" y="271">X</text><text x="264" y="30">Y</text>
+        <path id="error-line" class="error-line"/>
+        <path id="link-one" class="link link-one"/>
+        <path id="link-two" class="link link-two"/>
+        <circle cx="250" cy="250" r="10" class="joint"/>
+        <circle id="elbow" r="8" class="joint"/>
+        <circle id="tip" r="7" class="tip"/>
+        <g id="target" class="target"><circle r="19"/><path d="M -27 0 H 27 M 0 -27 V 27"/></g>
+        <text x="18" y="477">L₁ = 1.0 · L₂ = 0.8 · arbitrary length units</text>
+      </svg>
+      <div class="legend"><span><i class="swatch arm"></i>Arm</span><span><i class="swatch goal"></i>Requested target</span><span><i class="swatch error"></i>Position error</span></div>
+    </section>
+    <section class="controls" aria-label="Solver controls">
+      <label for="solver">Solver</label>
+      <select id="solver"><option value="dls">Iterative · damped least squares</option><option value="analytic">Analytic · geometry</option></select>
+      <div class="target-inputs"><label for="target-x">Target X<input id="target-x" type="number" min="-2.1" max="2.1" step="0.05" value="1.15"></label><label for="target-y">Target Y<input id="target-y" type="number" min="-2.1" max="2.1" step="0.05" value="0.75"></label></div>
+      <div id="dls-controls"><label for="damping">Damping λ <output id="damping-value">0.08</output></label><input id="damping" type="range" min="0.01" max="0.5" step="0.01" value="0.08"><p class="hint">Higher damping steadies the update near a straight arm; it can also slow convergence.</p></div>
+      <div id="analytic-controls" hidden><label for="branch">Elbow branch</label><select id="branch"><option value="1">Positive elbow angle</option><option value="-1">Negative elbow angle</option></select><p class="hint">Unreachable requests are projected onto the nearest workspace boundary.</p></div>
+      <div class="buttons"><button id="run" type="button">Run solver</button><button id="step" type="button">One step</button><button id="reset" type="button">Reset arm</button></div>
+      <dl class="readout"><div><dt>Shoulder θ₁</dt><dd id="q-one">—</dd></div><div><dt>Elbow θ₂</dt><dd id="q-two">—</dd></div><div><dt>Position error</dt><dd id="error">—</dd></div><div><dt>Iterations</dt><dd id="iterations">0</dd></div></dl>
+      <p id="status" role="status" aria-live="polite">Ready</p>
+      <details><summary>Try a tricky target</summary><div class="presets"><button type="button" data-preset="outside">Outside reach</button><button type="button" data-preset="inside">Inside the inner gap</button><button type="button" data-preset="singular">Nearly straight arm</button></div></details>
+    </section>
+  </div>
+  <footer>Position-only teaching model. Free joints, no collisions, no motor dynamics. The SO-101 uses a 3D pose controller.</footer>
+  <noscript>This demo needs JavaScript. The equations and explanation remain available in the article.</noscript>
+</main>
+</body>
+</html>
