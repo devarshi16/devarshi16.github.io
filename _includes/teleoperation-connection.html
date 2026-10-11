@@ -1,0 +1,22 @@
+<figure class="teleop-flow" aria-labelledby="teleop-flow-caption">
+  <div class="teleop-flow-heading"><span>THE TELEOPERATION LOOP</span><strong>One robot world. Two places to experience it.</strong></div>
+  <div class="teleop-flow-grid">
+    <section class="teleop-device quest"><h3>Meta Quest</h3><p class="device-subtitle">Tracking + immersive display</p>
+      <div class="flow-node"><b>Headset &amp; right controller</b><span>Head pose · controller pose · trigger</span></div>
+      <div class="flow-arrow" aria-hidden="true">↓</div>
+      <div class="flow-node"><b>Quest Browser · WebXR</b><span>Device tracking and immersive presentation</span></div>
+      <div class="flow-arrow" aria-hidden="true">↓</div>
+      <div class="flow-node highlighted"><b>Isaac web client · CloudXR.js</b><span>Sends tracking · receives streamed views</span></div>
+    </section>
+    <div class="teleop-transport"><span class="transport-forward">Tracking + controls →</span><b>USB</b><span>ADB reverse</span><span>HTTPS / WSS</span><span>WebRTC via TURN</span><span class="transport-return">← Rendered XR views</span></div>
+    <section class="teleop-device pc"><h3>PC</h3><p class="device-subtitle">GPU simulation + robot control</p>
+      <div class="flow-node highlighted"><b>CloudXR · OpenXR runtime</b><span>Exposes remote headset and controller tracking</span></div>
+      <div class="flow-arrow" aria-hidden="true">↓</div>
+      <div class="flow-node"><b>Isaac Sim · Kit XR bridge</b><span>Renders the scene and shares XR handles</span></div>
+      <div class="flow-arrow" aria-hidden="true">↓</div>
+      <div class="flow-node"><b>Isaac Teleop + Isaac Lab</b><span>Anchor → retargeting → IK → SO-101</span></div>
+      <div class="flow-record">↳ HDF5 demonstrations + trial CSV</div>
+    </section>
+  </div>
+  <figcaption id="teleop-flow-caption">Tracking flows from Quest to the PC; Isaac Sim renders the views sent back to Quest. The local launcher forwards services over USB. Wi-Fi remains enabled for WebRTC ICE.</figcaption>
+</figure>

@@ -94,7 +94,7 @@ export function legacyLoader(directory: string, type: 'blogs' | 'books'): Loader
             : tags.some(tag => /arduino|electronics|raspberry|gamepad/i.test(tag)) ? 'Hardware'
             : tags.some(tag => /regression|one hot|one-hot/i.test(tag)) ? 'Vision & ML' : 'Computing';
           const data = await context.parseData({ id, filePath, data: {
-            ...original, title: plainText(String(original.title ?? '')), description: plainText(String(original.description ?? '')),
+            ...original, cardImage: original.thumbnail ? `/assets/cards/${id}.webp` : undefined, title: plainText(String(original.title ?? '')), description: plainText(String(original.description ?? '')),
             tags: [...new Set(tags.map(slugify))], category,
             published: original.published !== false,
             readingMinutes: Math.max(1, Math.ceil(body.replace(/<[^>]*>/g, ' ').split(/\s+/).length / 220)),

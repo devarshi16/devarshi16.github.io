@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { SceneKit } from './geometry';
 
 export function createAvatar(kit:SceneKit) {
-  const root=new THREE.Group();root.scale.setScalar(.72);
+  const root=new THREE.Group();root.scale.setScalar(.92);
   const body=kit.box(root,[.53,.64,.3],[0,1.1,0],'avatar');
   kit.box(root,[.27,.16,.035],[0,1.28,.17],'accent','#a0c8bf');
   kit.mesh(root,kit.geometry('head',()=>new THREE.BoxGeometry(.39,.43,.36)),'skin',[0,1.65,0],'#cfa883');

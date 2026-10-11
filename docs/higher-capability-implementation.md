@@ -1,6 +1,8 @@
 Higher-capability implementation and handoff
 ==========================================
 
+**Historical baseline:** this records the initial pass. [The campus revision](campus-revision.md) supersedes its movement, spawn, labels and teleoperation publication details.
+
 **The higher-capability pass implements the architecture and an integrated working world on `feature/threejs-portfolio`.** Astro 7.3.8, TypeScript and Three.js 0.186.1 are pinned through the package manifest/lockfile. The site remains a local feature-branch candidate; publishing has not been changed. Jekyll files remain as source/rollback context, while the new build uses Astro.
 
 **The visual system is implemented in both themes.** Six distinct building destinations connect around a floating campus: Robotics, Vision, Maker, Journal, Research and Profile/Contact. The scene has modular rock islands, walkable bridges, equipment, trees, lamps, a polygonal avatar and ambient drones. Light mode uses muted stone/sage/slate; dark mode changes scene lighting/materials and warm window emission together with the page. Both variants use the same site typography, components and semantic colour tokens.

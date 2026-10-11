@@ -21,7 +21,9 @@ npm run build
 
 The Python tutorial checks require NumPy. The application itself requires only the Node dependencies. The production build verifies original article, book and tag routes, draft exclusion, and static entry points. `dist/` is the deployment artifact. GitHub Pages publishing settings have not been changed and this branch has not been deployed.
 
-**The world has two navigation paths.** Select a building or use Explore on foot and WASD/arrows. Crossing its front doorway opens the same page as its link. Escape releases keyboard controls. Career monuments reveal details in place. Pause motion freezes ambient animation; mobile users can use the direction pad or tap destinations.
+**The world has two navigation paths.** Select a building or move with the arrow keys immediately after load. Movement follows four isometric world axes (one direction at a time); crossing a front doorway opens the same page as its link. Fresh sessions start at Samsung, and Back restores the previous position. Wheel/touch scrolling remains available. Focused links and form controls retain their native keys. Escape clears held input and closes annotations. Career monuments and the avatar reveal offset annotations with engineering leader lines. Mobile users can use the four-direction touch pad or tap the buildings/white interaction dots.
+
+**Journal covers use real article imagery.** Asset preparation creates 640 × 360 WebP derivatives from each article's thumbnail, preserving originals. The SO-101 teleoperation walkthrough is included as published content in this feature branch, with its videos, IK example and diagrams. No remote publication has occurred.
 
 **Drafts remain private to local preview.**
 
@@ -29,7 +31,7 @@ The Python tutorial checks require NumPy. The application itself requires only t
 INCLUDE_DRAFTS=1 npm run dev
 ```
 
-Stop an existing daemon before changing its environment. Draft preview is allowed only in development. The production build explicitly excludes unpublished routes, discovery surfaces and teleoperation draft media even if `INCLUDE_DRAFTS=1` is present. The existing local draft/notes/assets are not automatically added to Git. A fresh checkout works without those files; the optional integration test is skipped when the local unpublished source is absent.
+Stop an existing daemon before changing its environment. Draft preview is allowed only in development. The production build excludes unpublished routes and discovery surfaces even if `INCLUDE_DRAFTS=1` is present. Teleoperation media are included because that article is now marked published. Local working notes remain untracked.
 
 **The principal contracts live in these modules.**
 
@@ -40,4 +42,4 @@ Stop an existing daemon before changing its environment. Draft preview is allowe
 - `tests/contracts.test.ts`: publication, navigation, content conversion and media contracts.
 - `examples/numpy_tutorials.py`, `tests/test_numpy_tutorials.py`: corrected numerical examples and regression checks.
 
-See [the plan](docs/portfolio-world-plan.md) and [the implementation/handoff record](docs/higher-capability-implementation.md). The larger archival images and final custom asset polish remain bounded follow-up work; all source originals are retained.
+See [the plan](docs/portfolio-world-plan.md) and [the implementation/handoff record](docs/higher-capability-implementation.md). See [the campus revision record](docs/campus-revision.md) for the latest visual/input changes, asset provenance and verification. Larger in-article archival images remain a possible follow-up; all source originals are retained.

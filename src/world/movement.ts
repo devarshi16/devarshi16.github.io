@@ -29,9 +29,9 @@ export function enteredDoor(from: Point, to: Point): string | undefined {
     if (from.z >= door.z + .12 && to.z < door.z + .12 && to.z >= d.position.z && Math.abs(to.x - door.x) < .61) return d.id;
   }
 }
-export function cameraRelativeInput(horizontal: number, vertical: number, yaw = Math.PI / 4): Point {
-  const length = Math.hypot(horizontal, vertical);
-  if (!length) return { x: 0, z: 0 };
-  const x = horizontal / Math.max(1, length), z = vertical / Math.max(1, length);
-  return { x: x * Math.cos(yaw) + z * Math.sin(yaw), z: -x * Math.sin(yaw) + z * Math.cos(yaw) };
+export function isometricInput(horizontal: number, vertical: number): Point {
+  // One world axis at a time: NW / NE / SW / SE in the isometric camera.
+  // The runtime supplies the most recently held key; the fallback also remains cardinal.
+  if (vertical) return { x: 0, z: Math.sign(vertical) };
+  return { x: Math.sign(horizontal), z: 0 };
 }
