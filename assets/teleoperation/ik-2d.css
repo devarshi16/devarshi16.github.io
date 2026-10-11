@@ -1,6 +1,6 @@
-:root { color-scheme: light; --ink: #17283f; --muted: #53647b; --line: #dce5ef; --blue: #255ddd; --teal: #11877b; --orange: #c34d28; }
+:root { color-scheme: light; --ink:#25313a;--muted:#596771;--line:#d9dfd8;--blue:#789ca6;--teal:#4e6867;--orange:#a17867;--surface:#fbfcf9;--bg:#f2f3f0; }
 * { box-sizing: border-box; }
-body { margin: 0; background: #f7f9fc; color: var(--ink); font-family: system-ui, sans-serif; font-size: 15px; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: system-ui, sans-serif; font-size: 15px; }
 .ik-demo { max-width: 1080px; margin: auto; padding: 24px; }
 header { margin-bottom: 20px; }
 .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .12em; color: var(--teal); margin: 0 0 8px; }
@@ -8,7 +8,7 @@ h1 { font-size: clamp(23px, 4vw, 32px); letter-spacing: -.04em; margin: 0 0 8px;
 header p:last-child { margin: 0; color: var(--muted); line-height: 1.5; }
 .demo-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(220px, 1fr); gap: 20px; }
 .workspace { min-width: 0; }
-svg { width: 100%; display: block; border: 1px solid var(--line); border-radius: 14px; background: #fff; touch-action: none; }
+svg { width: 100%; display: block; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); touch-action: none; }
 svg text { fill: var(--muted); font-family: system-ui, sans-serif; font-size: 12px; }
 .reach { fill: #edf5f9; fill-opacity: .6; stroke: #cad8e4; stroke-dasharray: 5 5; }
 .inner-reach { fill: #e4e9ef; fill-opacity: .8; stroke: #cad8e4; }
@@ -25,16 +25,19 @@ svg text { fill: var(--muted); font-family: system-ui, sans-serif; font-size: 12
 .controls { display: flex; flex-direction: column; gap: 10px; }
 label { display: block; font-size: 13px; font-weight: 600; }
 input,select,button { font: inherit; }
-input[type=number],select { width: 100%; border: 1px solid #bbc9d8; border-radius: 7px; padding: 9px; color: var(--ink); background: #fff; }
+input[type=number],select { width: 100%; border: 1px solid #bbc9d8; border-radius: 7px; padding: 9px; color: var(--ink); background: var(--surface); }
 .target-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }.target-inputs input { margin-top: 5px; }
 input[type=range] { width: 100%; accent-color: var(--blue); }output { float: right; font-variant-numeric: tabular-nums; }
 .hint { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 4px 0; }
 .buttons,.presets { display: flex; flex-wrap: wrap; gap: 7px; }
-button { padding: 9px 11px; border: 1px solid #b7c6d8; background: #fff; color: var(--ink); border-radius: 7px; cursor: pointer; font-size: 13px; }
-button:hover { background: #eaf0f9; }#run { background: var(--blue); color: #fff; border-color: var(--blue); }button:disabled { opacity: .5; cursor: default; }
+button { padding: 9px 11px; border: 1px solid #b7c6d8; background: var(--surface); color: var(--ink); border-radius: 7px; cursor: pointer; font-size: 13px; }
+button:hover { background: var(--bg); }#run { background: var(--blue); color: #fff; border-color: var(--blue); }button:disabled { opacity: .5; cursor: default; }
 :focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
 .readout { margin: 4px 0; border-top: 1px solid var(--line); padding-top: 8px; }.readout div { display: flex; justify-content: space-between; gap: 12px; margin: 6px 0; }.readout dt { color: var(--muted); font-size: 13px; }.readout dd { margin: 0; font-variant-numeric: tabular-nums; font-size: 13px; }
 #status { min-height: 36px; font-size: 13px; margin: 0; color: var(--teal); }details { font-size: 13px; }summary { cursor: pointer; }.presets { margin-top: 10px; }footer { color: var(--muted); font-size: 12px; margin-top: 16px; line-height: 1.5; }
 [hidden] { display: none !important; }
 @media (max-width: 560px) { .ik-demo { padding: 16px; }.demo-grid { grid-template-columns: 1fr; }.workspace { max-width: 460px; width: 100%; margin: auto; }.controls { gap: 12px; } }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+
+:root[data-theme=dark]{color-scheme:dark;--ink:#e2e6e5;--muted:#a7b2b8;--line:#36424b;--blue:#8faeb9;--teal:#9bbdb5;--orange:#c5aa87;--surface:#222b33;--bg:#171d23}
+[data-theme=dark] .reach,[data-theme=dark] .inner-reach{fill:#29363c;stroke:#526775}[data-theme=dark] .target{fill:#3b3431}

@@ -1,0 +1,27 @@
+---
+import Demo from '../../layouts/Demo.astro';
+const fields=[{id:'x',label:'X',min:-.5,max:.5,step:.005},{id:'y',label:'Y',min:-.5,max:.5,step:.005},{id:'z',label:'Z',min:.005,max:.6,step:.005},{id:'roll',label:'Roll',min:-180,max:180,step:5},{id:'pitch',label:'Pitch',min:-180,max:180,step:5},{id:'yaw',label:'Yaw',min:-180,max:180,step:5}];
+---
+<Demo title="SO-101 pose IK playground">
+<main class="so101-demo" data-so101-demo data-demo-state="loading">
+  <header><p class="eyebrow">SO-101 · FROM TARGET POSE TO JOINT ANGLES</p><h1>A pose the arm can reach.</h1><p>Drag the target handles or enter a pose. Orbit, pan and zoom to inspect the solve.</p></header>
+  <div class="robot-demo-grid">
+    <section class="robot-workspace" aria-label="SO-101 workspace"><div class="robot-canvas-wrap"><canvas tabindex="0" aria-label="Three-dimensional SO-101 arm and translucent target cube. Drag a target handle to move or rotate the goal; drag empty space to orbit the scene."></canvas><p class="robot-loading" data-loading-message>Loading the SO-101…</p><span class="robot-frame-label">ROBOT FRAME · Z UP · METRES</span></div><div class="robot-tools" aria-label="Scene tools"><button disabled data-transform-mode="translate" aria-pressed="true">Move target</button><button disabled data-transform-mode="rotate" aria-pressed="false">Rotate target</button><button disabled data-reset-camera>Reset camera</button></div><p class="robot-legend"><span><i class="swatch-target"></i>Target pose</span><span><i class="swatch-tool"></i>End effector</span><span>Drag scene: orbit · Right-drag: pan · Scroll/pinch: zoom</span></p></section>
+    <section class="robot-controls" aria-label="Target pose and IK controls">
+      <div class="robot-control-title"><h2>Target pose</h2><label><input disabled type="checkbox" data-auto-follow checked/> Auto follow</label></div>
+      <div class="pose-inputs">{fields.map(f=><label>{f.label}<span>{['x','y','z'].includes(f.id)?'m':'°'}</span><input disabled type="number" aria-label={`Target ${f.label}`} data-pose-input={f.id} min={f.min} max={f.max} step={f.step} value="0"/></label>)}</div>
+      <label class="orientation-toggle"><input disabled type="checkbox" data-solve-orientation checked/> Match rotation as well as position</label>
+      <div class="robot-tools"><button disabled data-step-ik>One IK step</button><button disabled data-reset-arm>Reset arm</button></div>
+      <dl class="robot-readout"><div><dt>Position error</dt><dd data-position-error>—</dd></div><div><dt>Rotation error</dt><dd data-rotation-error>—</dd></div><div><dt>Iterations</dt><dd data-iterations>0</dd></div></dl>
+      <p class="robot-solve-status" data-solve-status role="status">Preparing the arm and target.</p>
+      <div class="robot-presets"><button disabled data-pose-preset="reachable">Reachable pose</button><button disabled data-pose-preset="outside">Out of reach</button><button disabled data-pose-preset="home">Home target</button></div>
+      <details><summary>Joint angles & limits</summary><dl class="robot-joints" data-joint-angles></dl></details>
+    </section>
+  </div>
+  <footer><p>The SO-101 has five arm joints. Some 6D target poses cannot be matched; residuals remain visible. The translucent cube is a target marker with no collision hitbox. This is a kinematic demo, with joint limits and no physics.</p><p><a href="https://github.com/TheRobotStudio/SO-ARM100/tree/a758567c3978dfeefe282ede0500085a48fe8f78/Simulation/SO101">Official robot model ↗</a> · <a href="/blog/vr-teleoperation-so101-isaac-sim/">Back to the walkthrough ↗</a></p></footer>
+</main>
+<script>
+  const root=document.querySelector<HTMLElement>('[data-so101-demo]');
+  if(root)import('../../robot/runtime').then(({mountSO101})=>mountSO101(root)).catch(error=>{console.error('SO-101 playground:',error);root.dataset.demoState='fallback';root.querySelector('[data-loading-message]')!.textContent='The 3D view could not load. Reload the playground to try again.';});
+</script>
+</Demo>

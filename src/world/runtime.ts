@@ -70,8 +70,8 @@ export function mountWorld(stage:HTMLElement): () => void {
   }
   function positionAnnotation() {
     if(!annotation)return;
-    const stop=careerStops.find(s=>s.id===annotation!.id);
-    const anchor=project(stop?{...stop.position,y:2.9}:{...point,y:1.65});
+    const stop=careerStops.find(s=>s.id===annotation!.id),destination=destinations.find(d=>d.id===annotation!.id);
+    const anchor=project(stop?{...stop.position,y:2.9}:destination?{x:destination.position.x,z:destination.position.z+destination.depth/2+.29,y:1.14}:{...point,y:1.65});
     const width=stage.clientWidth,height=stage.clientHeight,pw=panel.offsetWidth,ph=panel.offsetHeight;
     const mobile=window.innerWidth<760;
     const left=mobile?(width-pw)/2:anchor.x>width/2?16:width-pw-16;
@@ -88,12 +88,12 @@ export function mountWorld(stage:HTMLElement): () => void {
   }
   function showAnnotation(id:string,persistent=true,focus=false) {
     clearTimeout(hoverTimer);
-    const item=career.find(c=>c.id===id),profile=id==='avatar';if(!profile&&!item)return;
-    panel.querySelector('[data-callout-eyebrow]')!.textContent=profile?'THE ENGINEER':'A STOP ALONG THE WAY';
-    panel.querySelector('[data-callout-name]')!.textContent=profile?'Devarshi Aggarwal':item!.name;
-    panel.querySelector('[data-callout-role]')!.textContent=profile?'Robotics & Physical AI · Samsung Electro-Mechanics':`${item!.role} · ${item!.dates}`;
-    panel.querySelector('[data-callout-copy]')!.textContent=profile?'I build robot-learning systems and computer vision that moves from an idea to something useful. Based in Bengaluru, India.':item!.details;
-    const link=panel.querySelector<HTMLAnchorElement>('[data-callout-link]')!;link.href=profile?'/about/':item!.link;link.textContent=profile?'About me ↗':'Explore related work ↗';
+    const item=career.find(c=>c.id===id),destination=destinations.find(d=>d.id===id),profile=id==='avatar';if(!profile&&!item&&!destination)return;
+    panel.querySelector('[data-callout-eyebrow]')!.textContent=profile?'THE ENGINEER':destination?'CAMPUS DESTINATION':'A STOP ALONG THE WAY';
+    panel.querySelector('[data-callout-name]')!.textContent=profile?'Devarshi Aggarwal':destination?.label??item!.name;
+    panel.querySelector('[data-callout-role]')!.textContent=profile?'Robotics & Physical AI · Samsung Electro-Mechanics':destination?.caption??`${item!.role} · ${item!.dates}`;
+    panel.querySelector('[data-callout-copy]')!.textContent=profile?'I build robot-learning systems and computer vision that moves from an idea to something useful. Based in Bengaluru, India.':destination?({robotics:'Robot learning, simulation and teleoperation workflows.',vision:'Production perception, recognition and tracking systems.',maker:'Electronics projects, controllers and things made by hand.',journal:'Technical walkthroughs and experiments from the workbench.',research:'Publications and questions across vision and robotics.',studio:'My background, experience and ways to get in touch.'}[destination.id]??destination.caption):persistent?item!.details:item!.description;
+    const link=panel.querySelector<HTMLAnchorElement>('[data-callout-link]')!;link.href=profile?'/about/':destination?.href??item!.link;link.textContent=profile?'About me ↗':destination?'Enter this building ↗':'Explore related work ↗';
     panel.querySelector<HTMLElement>('[data-callout-cv]')!.hidden=!profile;
     returnFocus=focus?document.activeElement as HTMLElement:canvas;annotation={id,persistent};panel.hidden=false;leader.dataset.active='true';
     avatarMarker.setAttribute('aria-expanded',String(profile));clearKeys();positionAnnotation();
@@ -172,6 +172,12 @@ export function mountWorld(stage:HTMLElement): () => void {
   function eventIsKeyboard(){return document.activeElement?.matches(':focus-visible')??false;}
   avatarMarker.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse'&&!annotation?.persistent)showAnnotation('avatar',false);},{signal});
   function scheduleClose(){if(annotation&&!annotation.persistent)hoverTimer=setTimeout(()=>closeAnnotation(),250);}
+  stage.querySelectorAll<HTMLElement>('[data-landmark]').forEach(marker=>{
+    marker.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse'&&!annotation?.persistent)showAnnotation(marker.dataset.landmark!,false);},{signal});
+    marker.addEventListener('pointerleave',scheduleClose,{signal});
+    marker.addEventListener('focus',()=>{if(!annotation?.persistent&&marker.matches(':focus-visible'))showAnnotation(marker.dataset.landmark!,false);},{signal});
+    marker.addEventListener('blur',scheduleClose,{signal});
+  });
   avatarMarker.addEventListener('pointerleave',scheduleClose,{signal});
   avatarMarker.addEventListener('click',()=>showAnnotation('avatar',true,eventIsKeyboard()),{signal});
   panel.addEventListener('pointerenter',()=>clearTimeout(hoverTimer),{signal});panel.addEventListener('pointerleave',scheduleClose,{signal});

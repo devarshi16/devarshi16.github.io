@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
 import { destinations, careerStops, bridges, type WorldDestination } from '../data/world';
 import { career } from '../data/career';
 import { SceneKit, tree, lamp, robotArm } from './geometry';
@@ -42,13 +41,16 @@ function bridge(kit: SceneKit, parent: THREE.Object3D, a: {x:number;z:number}, b
 }
 
 function signboard(kit:SceneKit,g:THREE.Object3D,d:WorldDestination,y:number) {
-  const width=Math.min(4.7,d.width+.65),height=1.02,z=d.depth/2+.18;
-  const board=new THREE.Mesh(kit.geometry(`board:${width}`,()=>new THREE.BoxGeometry(width,height,.18)),new THREE.MeshBasicMaterial({color:'#526d70',toneMapped:false}));
+  const width=Math.min(4.9,d.width+.85),height=1.42,z=d.depth/2+.60;
+  const board=new THREE.Mesh(kit.geometry(`board:${width}`,()=>new THREE.BoxGeometry(width,height,.18)),new THREE.MeshBasicMaterial({color:'#263e45',toneMapped:false}));
   board.position.set(0,y,z);g.add(board);
+  for(const side of [-1,1])kit.box(g,[.08,.09,.6],[side*width*.36,y+.2,z-.3],'frame');
   kit.box(g,[width,.06,.21],[0,y+height/2,z],'accent',d.accent);
-  const canvas=document.createElement('canvas');canvas.width=768;canvas.height=160;
+  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=320;
   const ctx=canvas.getContext('2d')!;ctx.fillStyle='#f7f8f1';ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.font='600 53px sans-serif';ctx.fillText(d.id==='studio'?'PROFILE & CONTACT':d.label.toUpperCase(),384,83,716);
+  const lines:Record<string,string[]>={robotics:['ROBOTICS','LAB'],vision:['VISION','OBSERVATORY'],maker:['MAKER','WORKSHOP'],journal:['ENGINEERING','JOURNAL'],research:['RESEARCH','PAVILION'],studio:['PROFILE','& CONTACT']};
+  ctx.font='800 112px sans-serif';ctx.fillText(lines[d.id][0],512,105,970);
+  ctx.font='700 88px sans-serif';ctx.fillText(lines[d.id][1],512,237,970);
   const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;kit.trackedTextures.add(texture);
   const text=new THREE.Mesh(kit.geometry(`sign-plane:${width}`,()=>new THREE.PlaneGeometry(width-.12,height-.08)),new THREE.MeshBasicMaterial({map:texture,transparent:true,toneMapped:false,depthWrite:false}));
   text.position.set(0,y,z+.095);g.add(text);
@@ -150,30 +152,27 @@ function careerMonument(kit: SceneKit, parent: THREE.Object3D, id: string, x:num
   const g=island(kit,parent,x,z,4.4,4.2,6.8);
   kit.cylinder(g,1.08,.22,[0,.35,-.2],'stone');
   kit.box(g,[.45,.95,.4],[0,.9,-.2],'metal');
-  kit.box(g,[3.05,1.75,.24],[0,1.95,-.2],'wall');
-  kit.box(g,[3.14,.09,.3],[0,2.86,-.2],'accent',data.color);
-  if(data.logo.endsWith('.svg')) {
-    new SVGLoader().load(data.logo,svg=>{
-      if(kit.disposed)return;
-      const relief=new THREE.Group();
-      svg.paths.forEach((path,index)=>path.toShapes().forEach((shape,part)=>{
-        const geometry=new THREE.ExtrudeGeometry(shape,{depth:5,bevelEnabled:false,curveSegments:3});
-        kit.geometries.set(`logo:${id}:${index}:${part}`,geometry);
-        relief.add(new THREE.Mesh(geometry,kit.material('brand',`#${path.color.getHexString()}`)));
-      }));
-      const bounds=new THREE.Box3().setFromObject(relief),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
-      relief.children.forEach(child=>child.position.set(-center.x,-center.y,0));
-      const scale=Math.min(2.65/size.x,1.28/size.y);relief.scale.set(scale,-scale,scale);relief.position.set(0,1.98,-.06);g.add(relief);
-    },undefined,()=>{});
-  } else {
-    new THREE.TextureLoader().load(data.logo,texture=>{
-      if(kit.disposed){texture.dispose();return;}
-      texture.colorSpace=THREE.SRGBColorSpace;kit.trackedTextures.add(texture);
-      const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,side:THREE.DoubleSide});
-      const ratio=texture.image.width/texture.image.height,width=Math.min(2.55,1.4*ratio),height=width/ratio;
-      const picture=new THREE.Mesh(new THREE.PlaneGeometry(width,height),material);picture.position.set(0,1.98,-.065);g.add(picture);
-    },undefined,()=>{});
-  }
+  const round=id==='jio'||id==='iitb';
+  const face=new THREE.Mesh(round?kit.geometry(`career-disc:${id}`,()=>new THREE.CylinderGeometry(1.3,1.3,.24,40)):kit.geometry('sem-board',()=>new THREE.BoxGeometry(3.85,1.8,.24)),new THREE.MeshBasicMaterial({color:'#f7f8f1',toneMapped:false}));
+  face.position.set(0,2.03,-.2);if(round)face.rotation.x=Math.PI/2;g.add(face);
+  if(round){const rim=kit.cylinder(g,1.36,.12,[0,2.03,-.27],'accent',data.color,40);rim.rotation.x=Math.PI/2;}
+  else kit.box(g,[3.93,.09,.3],[0,2.97,-.2],'accent',data.color);
+  // Rasterize SVG through the browser image loader, preserving its masks and full
+  // Electro-Mechanics wordmark. SVGLoader's geometry ignores those clipping masks.
+  new THREE.TextureLoader().load(data.logo,texture=>{
+    if(kit.disposed){texture.dispose();return;}
+    texture.colorSpace=THREE.SRGBColorSpace;kit.trackedTextures.add(texture);
+    const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,side:THREE.DoubleSide,toneMapped:false});
+    let width=round?2.15:3.55,height=round?2.15:width/(texture.image.width/texture.image.height);
+    if(id==='iitb')height=width*texture.image.height/106;
+    const geometry=new THREE.PlaneGeometry(width,height);
+    if(id==='iitb'){
+      // The official header artwork contains the seal at left. Select only that
+      // region via native mesh UVs; retain the source logo without redrawing it.
+      const uv=geometry.getAttribute('uv');for(let i=0;i<uv.count;i++)uv.setX(i,uv.getX(i)*106/texture.image.width);
+    }
+    const picture=new THREE.Mesh(geometry,material);picture.position.set(0,2.04,-.055);g.add(picture);
+  },undefined,()=>{});
   tree(kit,g,-1.55,-.8,.72);lamp(kit,g,1.65,.65);
   const proxy=new THREE.Mesh(new THREE.BoxGeometry(3.2,3.1,1.4),new THREE.MeshBasicMaterial({visible:false}));
   proxy.position.set(0,1.55,-.2);proxy.userData={kind:'career',id};g.add(proxy);return proxy;

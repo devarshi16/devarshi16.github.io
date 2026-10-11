@@ -11,7 +11,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <title>{title}</title><meta name="description" content={description} />
     <link rel="canonical" href={canonical} /><meta property="og:title" content={title} /><meta property="og:description" content={description} />
     <meta property="og:type" content="website" /><meta property="og:url" content={canonical} />
-    <link rel="icon" href="/assets/favicon_io/favicon.ico" /><link rel="alternate" type="application/rss+xml" title="Engineering Journal" href="/feed.xml" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" /><link rel="alternate" type="application/rss+xml" title="Engineering Journal" href="/feed.xml" />
     <script is:inline>
       try { document.documentElement.dataset.theme = localStorage.getItem('portfolio-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); }
       catch { document.documentElement.dataset.theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
@@ -35,6 +35,15 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         document.documentElement.dataset.theme = theme;
         try { localStorage.setItem('portfolio-theme', theme); } catch {}
         updateLabel();document.dispatchEvent(new CustomEvent('portfolio:theme'));
+      });
+      const demoFrames=()=>Array.from(document.querySelectorAll<HTMLIFrameElement>('iframe[data-portfolio-demo]'));
+      const sendTheme=(frame:HTMLIFrameElement)=>frame.contentWindow?.postMessage({type:'portfolio:theme',theme:document.documentElement.dataset.theme},location.origin);
+      document.addEventListener('portfolio:theme',()=>demoFrames().forEach(sendTheme));
+      window.addEventListener('message',event=>{
+        if(event.origin!==location.origin)return;
+        const frame=demoFrames().find(frame=>frame.contentWindow===event.source);if(!frame)return;
+        if(event.data?.type==='portfolio:demo-ready')sendTheme(frame);
+        if(event.data?.type==='portfolio:demo-size'&&Number.isFinite(event.data.height))frame.style.height=`${Math.max(300,Math.min(2200,event.data.height))}px`;
       });
       matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
         let override = null;try { override = localStorage.getItem('portfolio-theme'); } catch {}

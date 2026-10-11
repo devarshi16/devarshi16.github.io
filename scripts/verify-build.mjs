@@ -16,7 +16,7 @@ for(const file of [...(await readdir('tags')).map(name=>`tags/${name}`),'poetry.
   const meta=parse((await readFile(file,'utf8')).split(/^---\s*$/m)[1]);
   const url=meta.permalink||`/tags/${file.replace(/^tags\//,'').replace('.md','')}/`;await stat(`dist${url}index.html`);
 }
-for(const path of ['blog.html','404.html','assets/Devarshi_Aggarwal_CV.pdf','world/city-backdrop.webp'])await stat(`dist/${path}`);
+for(const path of ['blog.html','404.html','assets/Devarshi_Aggarwal_CV.pdf','world/city-backdrop.webp','favicon.svg','demos/ik-2d/index.html','demos/so101/index.html','robots/so101/LICENSE'])await stat(`dist/${path}`);
 const html=await read('index.html');assert.ok(!html.includes('{{'));assert.ok(html.includes('data-world-stage'));
 assert.ok(!html.includes('Teaching machines'));assert.equal((html.match(/data-landmark=/g)??[]).length,9);
 console.log('Verified legacy article/book/tag routes, draft exclusions, static entry points, and homepage.');

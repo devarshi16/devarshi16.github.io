@@ -43,3 +43,5 @@ Stop an existing daemon before changing its environment. Draft preview is allowe
 - `examples/numpy_tutorials.py`, `tests/test_numpy_tutorials.py`: corrected numerical examples and regression checks.
 
 See [the plan](docs/portfolio-world-plan.md) and [the implementation/handoff record](docs/higher-capability-implementation.md). See [the campus revision record](docs/campus-revision.md) for the latest visual/input changes, asset provenance and verification. Larger in-article archival images remain a possible follow-up; all source originals are retained.
+
+The teleoperation article now includes both a two-link playground at `/demos/ik-2d/` and an SO-101 pose playground at `/demos/so101/`. Run the local server to use these routes. The robot's source model, solver conventions, mesh importer and validation are recorded in [the playground notes](docs/so101-playground.md).

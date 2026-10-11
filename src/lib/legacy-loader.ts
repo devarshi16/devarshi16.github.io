@@ -56,7 +56,7 @@ export function renderLegacyMarkdown(body: string): { html: string; headings: { 
     allowedAttributes: {
       '*': ['id', 'class', 'aria-label', 'aria-labelledby', 'aria-hidden', 'role', 'title', 'style'],
       a: ['href', 'target', 'rel', 'download'], img: ['src', 'alt', 'width', 'height', 'loading'],
-      iframe: ['src', 'title', 'width', 'height', 'loading', 'allow', 'allowfullscreen', 'frameborder'],
+      iframe: ['src', 'title', 'width', 'height', 'loading', 'allow', 'allowfullscreen', 'frameborder', 'data-portfolio-demo'],
       video: ['controls', 'playsinline', 'preload', 'poster', 'width', 'height', 'aria-label'],
       source: ['src', 'type'], link: ['rel', 'href'],
       svg: ['viewBox', 'xmlns', 'width', 'height', 'aria-labelledby'],

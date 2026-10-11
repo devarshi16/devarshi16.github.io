@@ -81,7 +81,7 @@ test('local teleoperation conversion preserves media, iframe and diagram',async(
   const original=splitFrontmatter(source);
   assert.equal(original.data.published,true);
   const converted=await convertLiquid(original.body);const {html}=renderLegacyMarkdown(converted);
-  assert.ok(!converted.includes('{{'));assert.match(html,/\/assets\/teleoperation\/ik-2d.html/);
-  assert.ok(html.includes('<video'));assert.ok(html.includes('teleop-flow-grid'));
-  assert.ok(/<iframe[^>]*src="\/assets\/teleoperation\/ik-2d.html"/.test(html));
+  assert.ok(!converted.includes('{{'));assert.match(html,/\/demos\/ik-2d\//);
+  assert.ok(html.includes('<video'));assert.ok(html.includes('teleop-flow-grid'));assert.match(html,/data-portfolio-demo/);assert.match(html,/src="\/demos\/so101\/"/);
+  assert.ok(/<iframe[^>]*src="\/demos\/ik-2d\/"/.test(html));
 });

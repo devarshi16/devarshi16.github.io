@@ -2,6 +2,7 @@
 layout: blog_post
 title: "From a gamepad to VR: teleoperating an SO-101 in Isaac Sim"
 date: 2026-10-11
+updated: 2026-10-12
 published: true
 description: "The IK behind moving a robot with a VR controller, how my Quest connects to Isaac Sim, and what a recorded demonstration looks like before it becomes a LeRobot dataset."
 thumbnail: "/assets/teleoperation/gamepad-vs-quest-poster.jpg"
@@ -53,9 +54,9 @@ y = L₁ sin(θ₁) + L₂ sin(θ₁ + θ₂)
 
 The demo below implements both a geometric solution and an iterative damped least-squares solution. Move the target, then run the solver or advance one iteration at a time. Switch to the analytic solver to see the two elbow configurations that can reach the same point.
 
-<iframe class="teleop-ik" src="{{ '/assets/teleoperation/ik-2d.html' | relative_url }}" title="Interactive two-link inverse kinematics solver" loading="lazy"></iframe>
+<iframe class="teleop-ik" data-portfolio-demo src="{{ '/demos/ik-2d/' | relative_url }}" title="Interactive two-link inverse kinematics solver" loading="lazy"></iframe>
 
-[Open the IK playground on its own]({{ '/assets/teleoperation/ik-2d.html' | relative_url }}).
+[Open the IK playground on its own]({{ '/demos/ik-2d/' | relative_url }}).
 
 ### Solving it with geometry
 
@@ -103,6 +104,16 @@ Why damping? Near a fully extended arm, some Cartesian motions are hard to produ
 Try an unreachable target and a nearly straight arm. The iterative solver keeps the requested target, so residual error remains when the arm cannot reach it. At an exact singularity, an iterative method can also get stuck: resetting to a slightly bent configuration may give it a useful direction to move.
 
 This demo ignores joint limits, collisions, orientation, and actuator dynamics. In a robot controller, those concerns matter too. IK provides a target configuration; the simulator's actuators and physics determine how the arm moves toward it. NVIDIA's [task-space controller tutorial](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/05_controllers/run_diff_ik.html) shows that controller-to-joint-target loop in Isaac Lab.
+
+## Try pose IK on the SO-101
+
+The two-link example isolates position. This next playground uses the SO-101's actual published joint transforms, tool frame and limits, with a polygonal rendering in this site's palette. Move or rotate the translucent target cube, orbit the scene, or enter its position and roll/pitch/yaw directly. The end effector tries to match the requested pose using damped least squares.
+
+<iframe class="teleop-ik3d" data-portfolio-demo src="{{ '/demos/so101/' | relative_url }}" title="Interactive SO-101 position and orientation IK playground" loading="lazy"></iframe>
+
+[Open the 3D SO-101 playground]({{ '/demos/so101/' | relative_url }}).
+
+The five arm joints do not provide six independently controllable pose dimensions. Some position-and-rotation requests are incompatible, even when the position alone is reachable. The demo shows both residuals and offers position-only solving. The target cube has no collision hitbox, and this is a kinematic illustration rather than an Isaac Sim physics rollout. Visual meshes are simplified; the solver uses the original kinematic values from [TheRobotStudio's SO-101 model](https://github.com/TheRobotStudio/SO-ARM100/tree/a758567c3978dfeefe282ede0500085a48fe8f78/Simulation/SO101).
 
 ## Adding IK to the Isaac Sim task
 
