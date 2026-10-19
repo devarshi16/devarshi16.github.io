@@ -6,8 +6,8 @@ import { technicalArticles, visibleNews, newsUrl } from '../lib/content';
 import { career } from '../data/career';
 const posts = await technicalArticles();
 const latest = (await visibleNews())[0];
-const preferred = ['vr-teleoperation-so101-isaac-sim','diy-wired-arduino-pro-micro-gamepad','diy-raspberry-pi-power-hat','fast-one-hot-encoding-using-numpy-no-for-loops'];
-const featured = preferred.map(id=>posts.find(p=>p.id===id)).filter((p):p is NonNullable<typeof p>=>Boolean(p)).slice(0,3);
+// technicalArticles() is sorted newest first.
+const featured = posts.slice(0,3);
 ---
 <Base>
   <WorldHero />
