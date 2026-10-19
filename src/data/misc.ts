@@ -3,7 +3,6 @@
 // TODO(devarshi): add the profile link and the games below.
 export const steam = {
   account: 'MissFortune',
-  aliases: ['__REVOLUTION__'],
   level: 51,
   games: 166,
   // Leave empty until the real profile URL (steamcommunity.com/id/... or /profiles/...) is confirmed.

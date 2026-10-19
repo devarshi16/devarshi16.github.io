@@ -9,7 +9,6 @@ const books=await visibleBooks();
 const live=await fetchSteamProfile();
 const profileUrl=live?.profileUrl||steam.profileUrl;
 const account=live?.persona||steam.account;
-const aliases=steam.aliases.filter(alias=>alias!==account);
 ---
 <Base title="Misc — Devarshi Aggarwal" description="Poetry, published books and games: the non-engineering side of Devarshi Aggarwal.">
   <section class="page-intro"><a class="eyebrow" href="/">← BACK TO THE CAMPUS</a><h1>Everything <em>else.</em></h1><p>Poems, stories, published books and the games I keep coming back to.</p></section>
@@ -17,7 +16,7 @@ const aliases=steam.aliases.filter(alias=>alias!==account);
   <section class="section misc-block" id="books"><div class="section-heading"><div><p class="eyebrow">PUBLISHED BOOKS</p><h2>Stories, <em>in print.</em></h2></div><a class="text-link" href="/books/">The reading garden ↗</a></div><div class="book-grid">{books.map(book=><article class="book-card"><img src={book.data.image} alt={`${book.data.title} cover`} loading="lazy"/><div><h3>{book.data.title}</h3><p>{book.data.description}</p><a href={`/books/${book.id}/`}>About this book ↗</a> · <a href={book.data.book_url}>Find the book ↗</a></div></article>)}</div></section>
   <section class="section misc-block" id="writing"><div class="section-heading"><div><p class="eyebrow">POETRY & WRITING</p><h2>Words, <em>off the clock.</em></h2></div><a class="text-link" href="/tags/poetry/">All poems ↗</a></div><div class="article-grid">{poems.map((post,index)=><ArticleCard post={post} index={index}/>)}</div>{poems.length===0&&<p>No poems published yet.</p>}</section>
   <section class="section misc-block" id="gaming"><div class="section-heading"><div><p class="eyebrow">GAMING</p><h2>Lately <em>playing.</em></h2></div>{profileUrl&&<a class="text-link" href={profileUrl}>Steam profile ↗</a>}</div>
-    <div class="steam-card"><p class="eyebrow">STEAM</p><h3>{account}</h3>{aliases.length>0&&<p>Also known as {aliases.join(', ')}</p>}<dl class="steam-stats"><div><dt>Level</dt><dd>{steam.level}</dd></div><div><dt>Games</dt><dd>{steam.games}</dd></div></dl><p>Add me on Steam if you want to play together.</p>
+    <div class="steam-card"><p class="eyebrow">STEAM</p><h3>{account}</h3><dl class="steam-stats"><div><dt>Level</dt><dd>{steam.level}</dd></div><div><dt>Games</dt><dd>{steam.games}</dd></div></dl><p>Add me on Steam if you want to play together.</p>
       {live&&live.recent.length>0?<ul class="recent-games">{live.recent.map(game=><li><a href={game.url}><img src={game.image} alt="" loading="lazy" width="460" height="215"/><strong>{game.title}</strong><span>Last played {game.lastPlayed.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})} · {game.hours} h total</span></a></li>)}</ul>:<ul class="now-playing">{steam.nowPlaying.map(game=><li data-placeholder={game.placeholder?'true':undefined}><strong>{game.title}</strong>{game.note&&<span>{game.note}</span>}</li>)}</ul>}
       {steam.favourites.length>0&&<><p class="eyebrow">ALL-TIME FAVOURITES</p><ul class="now-playing">{steam.favourites.map(game=><li><strong>{game.title}</strong>{game.note&&<span>{game.note}</span>}</li>)}</ul></>}
     </div>
