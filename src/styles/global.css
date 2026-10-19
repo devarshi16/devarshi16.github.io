@@ -87,3 +87,4 @@
 .news-links{margin-top:40px}.article-body figure{margin:30px 0}.article-body figure video{width:100%;border-radius:6px;background:#000}.article-body figcaption{font-size:.75rem;color:var(--muted);margin-top:10px}
 .news-section{border-top:1px solid var(--line)}
 .steam-stats{display:flex;gap:28px;margin:18px 0}.steam-stats dt{font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}.steam-stats dd{margin:2px 0 0;font-size:1.5rem}
+.recent-games{list-style:none;padding:0;margin:22px 0;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.recent-games a{display:flex;flex-direction:column;gap:5px}.recent-games img{width:100%;height:auto;border-radius:5px;margin-bottom:6px}.recent-games strong{font-size:.9rem}.recent-games span{font-size:.7rem;color:var(--muted)}.steam-card:has(.recent-games){max-width:none}@media(max-width:760px){.recent-games{grid-template-columns:1fr}}
