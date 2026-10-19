@@ -1,6 +1,6 @@
 import { defineCollection } from 'astro:content';
 import { z } from 'astro/zod';
-import { legacyLoader } from './lib/legacy-loader';
+import { legacyLoader, newsLoader } from './lib/legacy-loader';
 
 const blogs = defineCollection({ loader: legacyLoader('_blogs', 'blogs'), schema: z.object({
   title: z.string(), date: z.coerce.date(), updated: z.coerce.date().optional(), description: z.string().default(''),
@@ -11,4 +11,9 @@ const books = defineCollection({ loader: legacyLoader('_mybooks', 'books'), sche
   title: z.string(), description: z.string(), image: z.string(), book_url: z.url(),
   published: z.boolean(), tags: z.array(z.string()), category: z.string(), readingMinutes: z.number(),
 }) });
-export const collections = { blogs, books };
+const news = defineCollection({ loader: newsLoader('_news'), schema: z.object({
+  title: z.string(), date: z.coerce.date(), kind: z.string(), summary: z.string(), location: z.string().optional(),
+  image: z.string().optional(), links: z.array(z.object({ label: z.string(), url: z.string() })).default([]),
+  published: z.boolean(),
+}) });
+export const collections = { blogs, books, news };

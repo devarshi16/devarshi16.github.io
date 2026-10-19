@@ -17,3 +17,8 @@ export function articleUrl(id: string): string {
 export function previewAllowed(mode: string, requested: boolean): boolean {
   return mode === 'development' && requested;
 }
+
+export function newsUrl(id: string): string {
+  if (!/^[a-z0-9-]+$/.test(id)) throw new Error(`Invalid news ID: ${id}`);
+  return `/news/${id}/`;
+}

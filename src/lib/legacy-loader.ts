@@ -110,3 +110,30 @@ export function legacyLoader(directory: string, type: 'blogs' | 'books'): Loader
     },
   };
 }
+
+export function newsLoader(directory: string): Loader {
+  return {
+    name: 'legacy-news',
+    async load(context) {
+      const sync = async () => {
+        context.store.clear();
+        const files = (await readdir(directory).catch(() => [] as string[])).filter(file => /\.(md|markdown)$/.test(file));
+        for (const file of files) {
+          const filePath = path.join(directory, file);
+          const source = await readFile(filePath, 'utf8');
+          const { data: original, body } = splitFrontmatter(source);
+          const id = file.replace(/\.(md|markdown)$/, '');
+          const data = await context.parseData({ id, filePath, data: {
+            ...original, title: plainText(String(original.title ?? '')), summary: plainText(String(original.summary ?? '')),
+            published: original.published !== false,
+          } });
+          const rendered = renderLegacyMarkdown(await convertLiquid(body));
+          context.store.set({ id, data, body, filePath, digest: context.generateDigest(source),
+            rendered: { html: rendered.html, metadata: { headings: rendered.headings } } });
+        }
+      };
+      await sync();
+      context.watcher?.on('change', file => { if (file.includes(`/${directory}/`)) void sync(); });
+    },
+  };
+}

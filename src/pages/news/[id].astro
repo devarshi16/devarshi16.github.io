@@ -1,0 +1,14 @@
+---
+import Base from '../../layouts/Base.astro';
+import { render, type CollectionEntry } from 'astro:content';
+import { visibleNews } from '../../lib/content';
+export async function getStaticPaths() {
+  return (await visibleNews()).map(item=>({params:{id:item.id},props:{item}}));
+}
+const {item}=Astro.props as {item:CollectionEntry<'news'>};
+const {Content,headings}=await render(item);
+---
+<Base title={`${item.data.title} — Devarshi Aggarwal`} description={item.data.summary}>
+  <header class="page-intro article-heading"><a class="eyebrow" href="/news/">← BACK TO NEWS</a><h1>{item.data.title}</h1><div class="article-meta"><time datetime={item.data.date.toISOString()}>{item.data.date.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'})}</time><span>{item.data.kind}</span>{item.data.location&&<span>{item.data.location}</span>}</div></header>
+  <div class="reading-layout"><nav class="article-toc" aria-label="Table of contents"><p class="eyebrow">IN THIS UPDATE</p>{headings.filter(h=>h.depth===2).map(h=><a href={`#${h.slug}`}>{h.text}</a>)}</nav><article class="article-body">{!item.data.published&&<p class="article-warning">Local draft preview. This update is excluded from the production site.</p>}<p><strong>{item.data.summary}</strong></p><Content/>{item.data.links.length>0&&<div class="case-links news-links">{item.data.links.map(link=><a href={link.url}>{link.label} ↗</a>)}</div>}</article></div>
+</Base>
