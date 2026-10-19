@@ -164,21 +164,22 @@ function careerMonument(kit: SceneKit, parent: THREE.Object3D, id: string, x:num
   // tiny intrinsic size (Samsung's is 241x28) and look blurry on the plaque.
   new THREE.ImageLoader().load(data.logo,image=>{
     if(kit.disposed)return;
-    const natural={width:image.naturalWidth||image.width,height:image.naturalHeight||image.height};
-    const scale=2048/Math.max(natural.width,natural.height),canvas=document.createElement('canvas');
-    canvas.width=Math.round(natural.width*scale);canvas.height=Math.round(natural.height*scale);
-    const ctx=canvas.getContext('2d')!;ctx.imageSmoothingQuality='high';ctx.drawImage(image,0,0,canvas.width,canvas.height);
+    // A viewBox-only SVG can report a zero natural size; treat it as square.
+    const aspect=image.naturalWidth&&image.naturalHeight?image.naturalWidth/image.naturalHeight:1;
+    const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d')!;ctx.imageSmoothingQuality='high';
+    if(round){
+      // Circular plaques: fit the mark inside the disc and clip it to a clean circle.
+      canvas.width=canvas.height=2048;
+      ctx.beginPath();ctx.arc(1024,1024,1024,0,Math.PI*2);ctx.clip();
+      const w=aspect>=1?2048:2048*aspect,h=aspect>=1?2048/aspect:2048;
+      ctx.drawImage(image,(2048-w)/2,(2048-h)/2,w,h);
+    } else {
+      canvas.width=2048;canvas.height=Math.round(2048/aspect);ctx.drawImage(image,0,0,canvas.width,canvas.height);
+    }
     const texture=kit.crisp(new THREE.CanvasTexture(canvas));
     const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,side:THREE.DoubleSide,toneMapped:false});
-    let width=round?2.55:4.15,height=round?2.55:width/(natural.width/natural.height);
-    if(id==='iitb')height=width*natural.height/106;
-    const geometry=new THREE.PlaneGeometry(width,height);
-    if(id==='iitb'){
-      // The official header artwork contains the seal at left. Select only that
-      // region via native mesh UVs; retain the source logo without redrawing it.
-      const uv=geometry.getAttribute('uv');for(let i=0;i<uv.count;i++)uv.setX(i,uv.getX(i)*106/natural.width);
-    }
-    const picture=new THREE.Mesh(geometry,material);picture.position.set(0,2.04,-.055);g.add(picture);
+    const width=round?2.55:4.15,height=round?2.55:width/aspect;
+    const picture=new THREE.Mesh(new THREE.PlaneGeometry(width,height),material);picture.position.set(0,2.04,-.055);g.add(picture);
   },undefined,()=>{});
   tree(kit,g,-1.55,-.8,.72);lamp(kit,g,1.65,.65);
   const proxy=new THREE.Mesh(new THREE.BoxGeometry(round?3.3:4.6,3.7,1.4),new THREE.MeshBasicMaterial({visible:false}));
