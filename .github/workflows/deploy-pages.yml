@@ -4,6 +4,9 @@ on:
   push:
     branches: [gh-pages]
   workflow_dispatch:
+  # Rebuild daily so the Steam games on /misc/ stay current.
+  schedule:
+    - cron: '30 3 * * *'
 
 permissions:
   contents: read
@@ -38,6 +41,9 @@ jobs:
           npm test
       - name: Build the production site
         run: npm run build
+        env:
+          STEAM_API_KEY: ${{ secrets.STEAM_API_KEY }}
+          STEAM_ID: ${{ secrets.STEAM_ID }}
       - name: Upload the built site
         uses: actions/upload-pages-artifact@v4
         with:

@@ -35,7 +35,8 @@ export function mountWorld(stage:HTMLElement): () => void {
   renderer.shadowMap.type=THREE.PCFShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;
   const scene=new THREE.Scene(), camera=new THREE.OrthographicCamera(-20,20,15,-15,.1,160);
   camera.position.set(34,34,34);camera.lookAt(0,-1.5,-1);
-  const kit=new SceneKit(), environment=createEnvironment(kit), avatar=createAvatar(kit);
+  const kit=new SceneKit();kit.anisotropy=renderer.capabilities.getMaxAnisotropy();
+  const environment=createEnvironment(kit), avatar=createAvatar(kit);
   scene.add(environment.root,avatar.root);
   const sun=new THREE.DirectionalLight('#fff6e8',3.2);sun.position.set(-12,28,12);sun.castShadow=true;
   sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-24,right:24,top:24,bottom:-24});

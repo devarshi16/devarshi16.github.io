@@ -1,0 +1,16 @@
+---
+import Base from '../../layouts/Base.astro';
+import NewsCard from '../../components/NewsCard.astro';
+import { visibleNews } from '../../lib/content';
+const items=await visibleNews();
+const kinds=[...new Set(items.map(item=>item.data.kind))];
+---
+<Base title="News — Devarshi Aggarwal" description="Hackathons, milestones, events and volunteering from Devarshi Aggarwal."><section class="page-intro"><a class="eyebrow" href="/">← BACK TO THE CAMPUS</a><h1>What’s <em>new.</em></h1><p>Hackathons, milestones, events I attended and work I volunteered for.</p></section><section class="section blog-list">{kinds.length>1&&<div class="blog-controls"><div class="filter-buttons" aria-label="News type">{['All',...kinds].map((kind,index)=><button data-kind-filter={kind} aria-pressed={index===0}>{kind}</button>)}</div></div>}<div class="article-grid" data-news-list>{items.map((item,index)=><NewsCard item={item} index={index}/>)}</div>{items.length===0&&<p class="empty-state">Nothing to report yet.</p>}</section></Base>
+<script>
+  const cards=[...document.querySelectorAll<HTMLElement>('[data-news-list] .news-card')];
+  document.querySelectorAll<HTMLButtonElement>('[data-kind-filter]').forEach(button=>button.addEventListener('click',()=>{
+    const kind=button.dataset.kindFilter!;
+    document.querySelectorAll('[data-kind-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+    for(const card of cards)card.hidden=kind!=='All'&&card.dataset.kind!==kind;
+  }));
+</script>

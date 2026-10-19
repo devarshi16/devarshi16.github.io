@@ -1,5 +1,5 @@
 import { getCollection } from 'astro:content';
-import { canPublish, previewAllowed, articleUrl } from './content-policy';
+import { canPublish, previewAllowed, articleUrl, newsUrl } from './content-policy';
 
 export const isDraftPreview = previewAllowed(import.meta.env.MODE, process.env.INCLUDE_DRAFTS === '1');
 export async function visibleArticles() {
@@ -8,6 +8,13 @@ export async function visibleArticles() {
 }
 export async function technicalArticles() {
   return (await visibleArticles()).filter(post => post.data.category !== 'Personal writing');
+}
+export async function personalWriting() {
+  return (await visibleArticles()).filter(post => post.data.category === 'Personal writing');
+}
+export async function visibleNews() {
+  return (await getCollection('news')).filter(item => canPublish(item.data, isDraftPreview))
+    .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 }
 export async function visibleBooks() {
   return (await getCollection('books')).filter(book => canPublish(book.data, isDraftPreview));
@@ -18,4 +25,4 @@ export async function allTags() {
   for (const tag of ['robotics', 'teleoperation', 'isaac-sim', 'physical-ai', 'poetry']) tags.add(tag);
   return [...tags].sort();
 }
-export { articleUrl };
+export { articleUrl, newsUrl };

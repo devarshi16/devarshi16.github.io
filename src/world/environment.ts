@@ -46,12 +46,13 @@ function signboard(kit:SceneKit,g:THREE.Object3D,d:WorldDestination,y:number) {
   board.position.set(0,y,z);g.add(board);
   for(const side of [-1,1])kit.box(g,[.08,.09,.6],[side*width*.36,y+.2,z-.3],'frame');
   kit.box(g,[width,.06,.21],[0,y+height/2,z],'accent',d.accent);
-  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=320;
-  const ctx=canvas.getContext('2d')!;ctx.fillStyle='#f7f8f1';ctx.textAlign='center';ctx.textBaseline='middle';
-  const lines:Record<string,string[]>={robotics:['ROBOTICS','LAB'],vision:['VISION','OBSERVATORY'],maker:['MAKER','WORKSHOP'],journal:['ENGINEERING','JOURNAL'],research:['RESEARCH','PAVILION'],studio:['PROFILE','& CONTACT']};
+  // Drawn at 3x the layout size so the lettering stays sharp on high-density screens.
+  const canvas=document.createElement('canvas');canvas.width=3072;canvas.height=960;
+  const ctx=canvas.getContext('2d')!;ctx.scale(3,3);ctx.fillStyle='#f7f8f1';ctx.textAlign='center';ctx.textBaseline='middle';
+  const lines:Record<string,string[]>={robotics:['ROBOTICS','LAB'],vision:['VISION','OBSERVATORY'],maker:['MAKER','WORKSHOP'],journal:['TECHNICAL','JOURNAL'],research:['RESEARCH','PAVILION'],studio:['PROFILE','& CONTACT']};
   ctx.font='800 128px sans-serif';ctx.fillText(lines[d.id][0],512,105,970);
   ctx.font='700 102px sans-serif';ctx.fillText(lines[d.id][1],512,237,970);
-  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;kit.trackedTextures.add(texture);
+  const texture=kit.crisp(new THREE.CanvasTexture(canvas));
   const text=new THREE.Mesh(kit.geometry(`sign-plane:${width}`,()=>new THREE.PlaneGeometry(width-.12,height-.08)),new THREE.MeshBasicMaterial({map:texture,transparent:true,toneMapped:false,depthWrite:false}));
   text.position.set(0,y,z+.095);g.add(text);
 }
@@ -159,19 +160,26 @@ function careerMonument(kit: SceneKit, parent: THREE.Object3D, id: string, x:num
   else kit.box(g,[4.53,.09,.3],[0,3.10,-.2],'accent',data.color);
   // Rasterize SVG through the browser image loader, preserving its masks and full
   // Electro-Mechanics wordmark. SVGLoader's geometry ignores those clipping masks.
-  new THREE.TextureLoader().load(data.logo,texture=>{
-    if(kit.disposed){texture.dispose();return;}
-    texture.colorSpace=THREE.SRGBColorSpace;kit.trackedTextures.add(texture);
-    const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,side:THREE.DoubleSide,toneMapped:false});
-    let width=round?2.55:4.15,height=round?2.55:width/(texture.image.width/texture.image.height);
-    if(id==='iitb')height=width*texture.image.height/106;
-    const geometry=new THREE.PlaneGeometry(width,height);
-    if(id==='iitb'){
-      // The official header artwork contains the seal at left. Select only that
-      // region via native mesh UVs; retain the source logo without redrawing it.
-      const uv=geometry.getAttribute('uv');for(let i=0;i<uv.count;i++)uv.setX(i,uv.getX(i)*106/texture.image.width);
+  // The image is redrawn onto a 2048px canvas: an SVG would otherwise rasterize at its
+  // tiny intrinsic size (Samsung's is 241x28) and look blurry on the plaque.
+  new THREE.ImageLoader().load(data.logo,image=>{
+    if(kit.disposed)return;
+    // A viewBox-only SVG can report a zero natural size; treat it as square.
+    const aspect=image.naturalWidth&&image.naturalHeight?image.naturalWidth/image.naturalHeight:1;
+    const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d')!;ctx.imageSmoothingQuality='high';
+    if(round){
+      // Circular plaques: fit the mark inside the disc and clip it to a clean circle.
+      canvas.width=canvas.height=2048;
+      ctx.beginPath();ctx.arc(1024,1024,1024,0,Math.PI*2);ctx.clip();
+      const w=aspect>=1?2048:2048*aspect,h=aspect>=1?2048/aspect:2048;
+      ctx.drawImage(image,(2048-w)/2,(2048-h)/2,w,h);
+    } else {
+      canvas.width=2048;canvas.height=Math.round(2048/aspect);ctx.drawImage(image,0,0,canvas.width,canvas.height);
     }
-    const picture=new THREE.Mesh(geometry,material);picture.position.set(0,2.04,-.055);g.add(picture);
+    const texture=kit.crisp(new THREE.CanvasTexture(canvas));
+    const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,side:THREE.DoubleSide,toneMapped:false});
+    const width=round?2.55:4.15,height=round?2.55:width/aspect;
+    const picture=new THREE.Mesh(new THREE.PlaneGeometry(width,height),material);picture.position.set(0,2.04,-.055);g.add(picture);
   },undefined,()=>{});
   tree(kit,g,-1.55,-.8,.72);lamp(kit,g,1.65,.65);
   const proxy=new THREE.Mesh(new THREE.BoxGeometry(round?3.3:4.6,3.7,1.4),new THREE.MeshBasicMaterial({visible:false}));

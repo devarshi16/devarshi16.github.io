@@ -25,7 +25,7 @@ import { career } from '../data/career';
   <div class="world-toolbar"><span class="world-key-hint" aria-hidden="true">ARROW KEYS TO WANDER · CLICK TO ENTER</span><div class="world-toolbar-buttons"><button class="quiet-button" data-pause-world aria-pressed="false">Pause motion</button><button class="quiet-button" data-reset-world>Return to Samsung</button></div></div>
   <p id="world-controls-help" class="sr-only" data-world-status role="status">Preparing the campus. Every destination is available in the directory below.</p>
   <div class="direction-pad" aria-label="Avatar direction controls"><div><button data-direction="arrowleft" aria-label="Walk northwest">↖</button><button data-direction="arrowup" aria-label="Walk northeast">↗</button></div><div><button data-direction="arrowdown" aria-label="Walk southwest">↙</button><button data-direction="arrowright" aria-label="Walk southeast">↘</button></div></div>
-  <a class="scroll-cue" href="#selected-work"><span>↓</span> MORE BELOW</a>
+  <a class="scroll-cue" href="#latest-news"><span>↓</span> MORE BELOW</a>
 </section>
 <details class="campus-directory"><summary>Campus directory <span>All destinations ↗</span></summary><div>{destinations.map(d=><a href={d.href}><strong>{d.label}</strong><span>{d.caption}</span></a>)}{career.map(c=><a href={`/about/#${c.id}`}><strong>{c.name}</strong><span>{c.role}</span></a>)}</div></details>
 <script>

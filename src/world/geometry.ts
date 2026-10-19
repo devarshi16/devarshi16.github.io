@@ -7,6 +7,15 @@ export class SceneKit {
   geometries = new Map<string, THREE.BufferGeometry>();
   trackedTextures = new Set<THREE.Texture>();
   theme: ThemeName = 'light';
+  anisotropy = 1;
+
+  // Text and logo textures are viewed at a steep isometric angle; full anisotropic
+  // filtering keeps them legible instead of blurring along the view direction.
+  crisp<T extends THREE.Texture>(texture: T): T {
+    texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = this.anisotropy;
+    texture.minFilter = THREE.LinearMipmapLinearFilter; texture.generateMipmaps = true;
+    this.trackedTextures.add(texture); return texture;
+  }
 
   material(role: MaterialRole | string, color?: string): THREE.MeshStandardMaterial {
     const key = color ? `${role}:${color}` : role;

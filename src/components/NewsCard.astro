@@ -1,0 +1,14 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { newsUrl } from '../lib/content-policy';
+interface Props { item: CollectionEntry<'news'>; index?: number; }
+const { item, index = 0 } = Astro.props;
+---
+<a class="article-card news-card" href={newsUrl(item.id)} data-kind={item.data.kind}>
+  <div class={`article-art art-${index%3}`}>
+    {item.data.image && <img src={item.data.image} alt="" loading="lazy" width="640" height="360" />}
+    <span>{item.data.kind}</span><i aria-hidden="true">↗</i>
+  </div>
+  <div class="article-meta"><time datetime={item.data.date.toISOString()}>{item.data.date.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})}</time>{item.data.location&&<span>{item.data.location}</span>}{!item.data.published&&<span class="draft-badge">Local draft</span>}</div>
+  <h3>{item.data.title}</h3><p>{item.data.summary}</p>
+</a>
