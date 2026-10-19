@@ -24,7 +24,7 @@ test('Steam profile combines the player summary with the latest games',async()=>
     ?{response:{games:[{appid:7,name:'Game',rtime_last_played:1760000000,playtime_forever:120}]}}
     :{response:{players:[{personaname:'MissFortune',profileurl:'https://steamcommunity.com/id/example/'}]}}))) as typeof fetch;
   try{
-    const profile=await fetchSteamProfile({STEAM_API_KEY:'k',STEAM_ID:'1'});
+    const profile=await fetchSteamProfile({STEAM_API_KEY:'k',STEAM_ID:'76561198000000000'});
     assert.equal(profile?.persona,'MissFortune');assert.equal(profile?.profileUrl,'https://steamcommunity.com/id/example/');
     assert.deepEqual(profile?.recent.map(g=>g.title),['Game']);
   }finally{globalThis.fetch=original;}
