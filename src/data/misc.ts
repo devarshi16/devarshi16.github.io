@@ -1,7 +1,11 @@
 // Gaming corner on /misc/. Edit by hand; nothing here is fetched at build time.
-// TODO(devarshi): confirm the Steam profile link and the games below.
+// Profile figures copied from the Steam app on 2026-10-19.
+// TODO(devarshi): add the profile link and the games below.
 export const steam = {
-  account: '__REVOLUTION__',
+  account: 'MissFortune',
+  aliases: ['__REVOLUTION__'],
+  level: 51,
+  games: 166,
   // Leave empty until the real profile URL (steamcommunity.com/id/... or /profiles/...) is confirmed.
   profileUrl: '',
   nowPlaying: [
