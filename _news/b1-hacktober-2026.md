@@ -18,8 +18,13 @@ links:
 The task: teach an SO101 arm, through leader/follower teleoperation, to pick the blue candies out of a mixed blue and green pile and drop them on a towel. Policies were trained on real demos, scripted Isaac Sim demos, or a mix of both, and checked on the real arm and in a digital twin.
 
 <figure>
-<video controls muted playsinline preload="metadata" poster="/assets/news/b1-hacktober-2026/smolvla-blue-on-towel-poster.jpg"><source src="/assets/news/b1-hacktober-2026/smolvla-blue-on-towel.mp4" type="video/mp4"></video>
-<figcaption>SmolVLA at 10k steps, trained on the grid dataset, picks a blue candy out of the mixed scene and places it on the towel. Phone camera on the left, wrist camera on the right.</figcaption>
+<video controls muted playsinline preload="metadata" poster="/assets/news/b1-hacktober-2026/act-real-blue-on-towel-poster.jpg"><source src="/assets/news/b1-hacktober-2026/act-real-blue-on-towel.mp4" type="video/mp4"></video>
+<figcaption>On the real arm: ACT trained on 127 real demos (50k steps) picks a blue candy out of the pile and drops it on the towel. Phone camera on the left, wrist camera on the right.</figcaption>
+</figure>
+
+<figure>
+<video controls muted playsinline preload="metadata" poster="/assets/news/b1-hacktober-2026/act-sim-blue-on-towel-poster.jpg"><source src="/assets/news/b1-hacktober-2026/act-sim-blue-on-towel.mp4" type="video/mp4"></video>
+<figcaption>In the Isaac Sim digital twin: the same ACT policy at 70k steps carries a blue candy to the towel. It succeeded in 3 of 5 simulated rollouts.</figcaption>
 </figure>
 
 ## What we built
@@ -31,8 +36,8 @@ The task: teach an SO101 arm, through leader/follower teleoperation, to pick the
 
 ## Results
 
-- SmolVLA trained on the grid data placed a blue candy on the towel in 2 of 6 real-arm runs at 10k steps.
-- ACT trained on 127 real demos scored 3 of 5 in the simulated twin at 70k steps, up from 0 of 5 at 30k and 40k, and placed a blue candy on the real arm at 50k.
+- ACT trained on 127 real demos placed a blue candy on the towel on the real arm at 50k steps, and scored 3 of 5 in the simulated twin at 70k steps, up from 0 of 5 at 30k and 40k.
+- SmolVLA trained on the grid data reached for and grasped blue candies on the real arm, but most runs did not end with a candy on the towel.
 - The RL policy reaches over the detected candy on the real arm but has not learned to close the gripper yet.
 
 ## What we learned
