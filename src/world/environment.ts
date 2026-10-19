@@ -46,12 +46,13 @@ function signboard(kit:SceneKit,g:THREE.Object3D,d:WorldDestination,y:number) {
   board.position.set(0,y,z);g.add(board);
   for(const side of [-1,1])kit.box(g,[.08,.09,.6],[side*width*.36,y+.2,z-.3],'frame');
   kit.box(g,[width,.06,.21],[0,y+height/2,z],'accent',d.accent);
-  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=320;
-  const ctx=canvas.getContext('2d')!;ctx.fillStyle='#f7f8f1';ctx.textAlign='center';ctx.textBaseline='middle';
-  const lines:Record<string,string[]>={robotics:['ROBOTICS','LAB'],vision:['VISION','OBSERVATORY'],maker:['MAKER','WORKSHOP'],journal:['ENGINEERING','JOURNAL'],research:['RESEARCH','PAVILION'],studio:['PROFILE','& CONTACT']};
+  // Drawn at 3x the layout size so the lettering stays sharp on high-density screens.
+  const canvas=document.createElement('canvas');canvas.width=3072;canvas.height=960;
+  const ctx=canvas.getContext('2d')!;ctx.scale(3,3);ctx.fillStyle='#f7f8f1';ctx.textAlign='center';ctx.textBaseline='middle';
+  const lines:Record<string,string[]>={robotics:['ROBOTICS','LAB'],vision:['VISION','OBSERVATORY'],maker:['MAKER','WORKSHOP'],journal:['TECHNICAL','JOURNAL'],research:['RESEARCH','PAVILION'],studio:['PROFILE','& CONTACT']};
   ctx.font='800 128px sans-serif';ctx.fillText(lines[d.id][0],512,105,970);
   ctx.font='700 102px sans-serif';ctx.fillText(lines[d.id][1],512,237,970);
-  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;kit.trackedTextures.add(texture);
+  const texture=kit.crisp(new THREE.CanvasTexture(canvas));
   const text=new THREE.Mesh(kit.geometry(`sign-plane:${width}`,()=>new THREE.PlaneGeometry(width-.12,height-.08)),new THREE.MeshBasicMaterial({map:texture,transparent:true,toneMapped:false,depthWrite:false}));
   text.position.set(0,y,z+.095);g.add(text);
 }
@@ -159,17 +160,23 @@ function careerMonument(kit: SceneKit, parent: THREE.Object3D, id: string, x:num
   else kit.box(g,[4.53,.09,.3],[0,3.10,-.2],'accent',data.color);
   // Rasterize SVG through the browser image loader, preserving its masks and full
   // Electro-Mechanics wordmark. SVGLoader's geometry ignores those clipping masks.
-  new THREE.TextureLoader().load(data.logo,texture=>{
-    if(kit.disposed){texture.dispose();return;}
-    texture.colorSpace=THREE.SRGBColorSpace;kit.trackedTextures.add(texture);
+  // The image is redrawn onto a 2048px canvas: an SVG would otherwise rasterize at its
+  // tiny intrinsic size (Samsung's is 241x28) and look blurry on the plaque.
+  new THREE.ImageLoader().load(data.logo,image=>{
+    if(kit.disposed)return;
+    const natural={width:image.naturalWidth||image.width,height:image.naturalHeight||image.height};
+    const scale=2048/Math.max(natural.width,natural.height),canvas=document.createElement('canvas');
+    canvas.width=Math.round(natural.width*scale);canvas.height=Math.round(natural.height*scale);
+    const ctx=canvas.getContext('2d')!;ctx.imageSmoothingQuality='high';ctx.drawImage(image,0,0,canvas.width,canvas.height);
+    const texture=kit.crisp(new THREE.CanvasTexture(canvas));
     const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,side:THREE.DoubleSide,toneMapped:false});
-    let width=round?2.55:4.15,height=round?2.55:width/(texture.image.width/texture.image.height);
-    if(id==='iitb')height=width*texture.image.height/106;
+    let width=round?2.55:4.15,height=round?2.55:width/(natural.width/natural.height);
+    if(id==='iitb')height=width*natural.height/106;
     const geometry=new THREE.PlaneGeometry(width,height);
     if(id==='iitb'){
       // The official header artwork contains the seal at left. Select only that
       // region via native mesh UVs; retain the source logo without redrawing it.
-      const uv=geometry.getAttribute('uv');for(let i=0;i<uv.count;i++)uv.setX(i,uv.getX(i)*106/texture.image.width);
+      const uv=geometry.getAttribute('uv');for(let i=0;i<uv.count;i++)uv.setX(i,uv.getX(i)*106/natural.width);
     }
     const picture=new THREE.Mesh(geometry,material);picture.position.set(0,2.04,-.055);g.add(picture);
   },undefined,()=>{});
