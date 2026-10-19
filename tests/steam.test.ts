@@ -29,3 +29,12 @@ test('Steam profile combines the player summary with the latest games',async()=>
     assert.deepEqual(profile?.recent.map(g=>g.title),['Game']);
   }finally{globalThis.fetch=original;}
 });
+test('a custom profile name is resolved to the numeric Steam id',async()=>{
+  const original=globalThis.fetch;const urls:string[]=[];
+  globalThis.fetch=(async(url:string)=>{urls.push(String(url));return new Response(JSON.stringify(String(url).includes('ResolveVanityURL')
+    ?{response:{success:1,steamid:'76561198000000000'}}:{response:{}}));}) as typeof fetch;
+  try{
+    await fetchSteamProfile({STEAM_API_KEY:'k',STEAM_ID:'https://steamcommunity.com/id/example/'});
+    assert.ok(urls[0].includes('vanityurl=example'));assert.ok(urls.slice(1).every(u=>u.includes('76561198000000000')));
+  }finally{globalThis.fetch=original;}
+});
