@@ -10,6 +10,23 @@ tags: ["Raspberry Pi", "Electronics", "Rust", "Compilers", "PICO-8"]
 
 <link rel="stylesheet" href="/assets/pocket-aot/article.css">
 
+## UPDATE: 22 October 2026
+
+A lot has moved since the original post below. Against a fixed set of the **top 100 PICO-8 carts**:
+
+| Measure | Result |
+| --- | --- |
+| Translate to C | **100/100** |
+| Build native Raspberry Pi Pico firmware (RP2040) | **77/100** |
+| Build native firmware for the Pico 2 W (RP2350) | **90/100** |
+| Games on the Pocket Arcade shelf | **83** |
+
+Native builds climbed from 2 to 10, 22, 27, 65 and now 77 on the RP2040, with 90 on the Pico 2 W. The Pico 2 W is now a supported target, and the flasher picks the right image from the board ID. **Celeste** has been verified on real hardware.
+
+Most of the remaining failures are memory limits rather than missing language features: table entry pools, upper memory at `0x8000` and above, coroutines and call depth. Audio, `cstore`/saves and `#include` are still missing.
+
+The next step is **golden-frame comparison tests** against PICO-8 itself, an idea suggested on Reddit, so fidelity can be measured instead of eyeballed. The sections below describe the 16 October snapshot and are kept as written.
+
 I started with a Raspberry Pi Pico W, a small Waveshare screen, and a question about whether all its buttons worked. That turned into a spaceship cockpit, a colorful aquarium, a handheld Celeste port, and eventually a more interesting question: could I compile a PICO-8 cartridge into something this microcontroller could run on its own?
 
 The result is **Pocket AOT**, an experimental ahead-of-time compiler and compatibility runtime, and **Pocket Arcade**, the desktop GUI for importing, converting and flashing cartridges. I built and iterated on them with Codex, checking the display and controls on the actual board as we went.
