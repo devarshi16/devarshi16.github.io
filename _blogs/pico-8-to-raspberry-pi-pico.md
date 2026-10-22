@@ -25,7 +25,27 @@ Native builds climbed from 2 to 10, 22, 27, 65 and now 77 on the RP2040, with 90
 
 Most of the remaining failures are memory limits rather than missing language features: table entry pools, upper memory at `0x8000` and above, coroutines and call depth. Audio, `cstore`/saves and `#include` are still missing.
 
-The next step is **golden-frame comparison tests** against PICO-8 itself, an idea suggested on Reddit, so fidelity can be measured instead of eyeballed. The sections below describe the 16 October snapshot and are kept as written.
+The next step is **golden-frame comparison tests** against PICO-8 itself, an idea suggested on Reddit, so fidelity can be measured instead of eyeballed.
+
+<figure class="pico-media pico-gui">
+  <a href="/assets/pocket-aot/shelf-83-of-100.png"><img src="/assets/pocket-aot/shelf-83-of-100.png" width="1080" height="1080" alt="Grid of 83 cartridge labels from the Pocket Arcade shelf under the heading 83 of 100 popular PICO-8 games build Pico firmware"></a>
+  <figcaption>The 83 converted carts on the Pocket Arcade shelf, out of the top 100.</figcaption>
+</figure>
+
+Here are a few of the converted carts. Each one builds native Raspberry Pi Pico firmware for both the RP2040 and the Pico 2 W. A successful build is not verified gameplay, and of these only Celeste has been checked on the device so far. Each links to the game's original page.
+
+<div class="pico-carts">
+  <a href="https://www.lexaloffle.com/bbs/?pid=11722"><img src="/assets/pocket-aot/carts/celeste-classic.png" width="128" height="128" alt="Celeste Classic cartridge label" loading="lazy"><b>Celeste Classic</b><span>Maddy Thorson &amp; Noel Berry</span></a>
+  <a href="https://www.lexaloffle.com/bbs/?pid=49234"><img src="/assets/pocket-aot/carts/just-one-boss.png" width="128" height="128" alt="Just One Boss cartridge label" loading="lazy"><b>Just One Boss</b><span>bridgs</span></a>
+  <a href="https://www.lexaloffle.com/bbs/?pid=100000"><img src="/assets/pocket-aot/carts/birds-with-guns.png" width="128" height="128" alt="Birds With Guns cartridge label" loading="lazy"><b>Birds With Guns</b><span>Yolwoocle</span></a>
+  <a href="https://www.lexaloffle.com/bbs/?pid=73825"><img src="/assets/pocket-aot/carts/porklike.png" width="128" height="128" alt="Porklike cartridge label" loading="lazy"><b>Porklike</b><span>Krystman</span></a>
+  <a href="https://www.lexaloffle.com/bbs/?pid=81456"><img src="/assets/pocket-aot/carts/islander.png" width="128" height="128" alt="Islander cartridge label" loading="lazy"><b>Islander</b><span>CarsonK</span></a>
+  <a href="https://www.lexaloffle.com/bbs/?pid=21098"><img src="/assets/pocket-aot/carts/mistigri.png" width="128" height="128" alt="Mistigri cartridge label" loading="lazy"><b>Mistigri</b><span>benjamin_soule</span></a>
+  <a href="https://www.lexaloffle.com/bbs/?pid=63193"><img src="/assets/pocket-aot/carts/pico-tetris.png" width="128" height="128" alt="Pico Tetris cartridge label" loading="lazy"><b>Pico Tetris</b><span>Vanessa</span></a>
+  <a href="https://www.lexaloffle.com/bbs/?pid=83604"><img src="/assets/pocket-aot/carts/super-disc-box.png" width="128" height="128" alt="Super Disc Box cartridge label" loading="lazy"><b>Super Disc Box</b><span>Farbs</span></a>
+</div>
+
+The sections below describe the 16 October snapshot and are kept as written.
 
 I started with a Raspberry Pi Pico W, a small Waveshare screen, and a question about whether all its buttons worked. That turned into a spaceship cockpit, a colorful aquarium, a handheld Celeste port, and eventually a more interesting question: could I compile a PICO-8 cartridge into something this microcontroller could run on its own?
 
