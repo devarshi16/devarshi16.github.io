@@ -1,0 +1,13 @@
+---
+import { goatCounterEndpoint } from '../lib/analytics';
+const endpoint = goatCounterEndpoint(import.meta.env.PUBLIC_GOATCOUNTER_CODE);
+const enabled = import.meta.env.PROD && endpoint && Astro.site;
+---
+{enabled && <span hidden data-portfolio-analytics data-endpoint={endpoint} data-origin={Astro.site?.origin}></span>}
+<script>
+  import { installAnalytics } from '../lib/analytics';
+  document.querySelectorAll<HTMLElement>('[data-portfolio-analytics]').forEach(element => {
+    const { endpoint, origin } = element.dataset;
+    if (endpoint && origin) installAnalytics({ endpoint, productionOrigin: origin });
+  });
+</script>

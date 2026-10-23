@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
+import Analytics from '../components/Analytics.astro';
 import '../styles/robot-demo.css';
 const {title}=Astro.props;
 ---
-<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>{title} — Devarshi Aggarwal</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"/><script src="/assets/teleoperation/embed-theme.js" defer is:inline></script></head><body class="demo-page"><slot/></body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>{title} — Devarshi Aggarwal</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"/><script src="/assets/teleoperation/embed-theme.js" defer is:inline></script></head><body class="demo-page"><slot/><Analytics /></body></html>

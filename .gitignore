@@ -11,3 +11,8 @@ public/assets/
 .local-qa/
 public/examples/
 __pycache__/
+
+# Local environment overrides; public examples are safe to commit.
+.env
+.env.*
+!.env.example

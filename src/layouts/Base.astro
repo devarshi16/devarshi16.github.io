@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import Analytics from '../components/Analytics.astro';
 interface Props { title?: string; description?: string; }
 const { title = 'Devarshi Aggarwal — Robotics & Physical AI', description = 'Robot learning, computer vision, and things made by hand. Explore the work and engineering notes of Devarshi Aggarwal.' } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -50,5 +51,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         if (!override) { document.documentElement.dataset.theme = event.matches ? 'dark' : 'light'; updateLabel();document.dispatchEvent(new CustomEvent('portfolio:theme')); }
       });
     </script>
+    <Analytics />
   </body>
 </html>

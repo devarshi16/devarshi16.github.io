@@ -1,0 +1,34 @@
+---
+interface Props { enabled?: boolean; }
+const { enabled = true } = Astro.props;
+const repo = import.meta.env.PUBLIC_GISCUS_REPO?.trim() || 'devarshi16/devarshi16.github.io';
+const repoId = import.meta.env.PUBLIC_GISCUS_REPO_ID?.trim() || (repo === 'devarshi16/devarshi16.github.io' ? 'R_kgDONGnexw' : '');
+const category = import.meta.env.PUBLIC_GISCUS_CATEGORY?.trim() || 'Blog comments';
+const categoryId = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID?.trim();
+const configured = enabled && /^[\w.-]+\/[\w.-]+$/.test(repo) && repoId && categoryId;
+---
+{configured && (
+  <section class="comments" aria-labelledby="comments-title" data-comments data-repo={repo} data-repo-id={repoId} data-category={category} data-category-id={categoryId}>
+    <h2 id="comments-title">Comments</h2>
+    <p data-comments-status role="status" aria-live="polite">Comments load as you reach this section. Sign in with GitHub to join.</p>
+    <button class="button outline" type="button" data-comments-load hidden>Load comments</button>
+    <div id="giscus-comments" class="giscus" data-comments-host aria-busy="false"></div>
+    <p class="comments-fallback"><a href={`https://github.com/${repo}/discussions`}>Read or comment on GitHub ↗</a></p>
+    <noscript><p>Enable JavaScript to see embedded comments, or use the GitHub link above.</p></noscript>
+  </section>
+)}
+<script>
+  import { initComments } from '../lib/comments';
+  document.querySelectorAll<HTMLElement>('[data-comments]').forEach(section => initComments(section));
+</script>
+<style>
+  .comments{margin-top:4rem;padding-top:2rem;border-top:1px solid var(--line)}
+  .comments h2{font-size:1.9rem;margin:0 0 1rem}
+  .comments p{font-size:.83rem;color:var(--muted);line-height:1.7}
+  .comments button{margin-bottom:1rem}
+  .giscus{min-height:12rem;width:100%}
+  .comments[data-comments-state=error] .giscus{min-height:0}
+  .giscus :global(iframe.giscus-frame){width:100%;border:0;display:block}
+  .comments-fallback{margin-top:1rem}
+  .comments-fallback a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+</style>
