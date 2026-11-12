@@ -6,6 +6,7 @@ import { render, type CollectionEntry } from 'astro:content';
 import { visibleArticles, visibleBooks, allTags, articleUrl } from '../lib/content';
 import { projects } from '../data/projects';
 import { career } from '../data/career';
+import { SITE, PERSON_ID, identity, postingJsonLd, publicationsJsonLd } from '../data/identity';
 type Route = { kind:'article'; article:CollectionEntry<'blogs'> } | { kind:'tag'; tag:string } | { kind:'book'; book:CollectionEntry<'books'> } | { kind:'page'; id:string };
 export async function getStaticPaths() {
   const articles=await visibleArticles();const books=await visibleBooks();const tags=await allTags();
@@ -23,8 +24,16 @@ const articles=await visibleArticles();
 const renderedArticle=info.kind==='article'?await render(info.article):null;
 const ArticleContent=renderedArticle?.Content;
 const books=info.kind==='page'&&info.id==='books'?await visibleBooks():[];
+// Per-page metadata for search and answer engines; nothing here changes what is rendered.
+const url=new URL(Astro.url.pathname,Astro.site).href;
+const pageDescriptions:Record<string,string>={projects:'Selected work by Devarshi Aggarwal across robot learning, production computer vision and hand-built electronics.','projects/robotics':'Devarshi Aggarwal’s robotics work at Samsung Electro-Mechanics: manipulation in Isaac Sim and Isaac Lab, reinforcement and imitation learning, and VR teleoperation.','projects/vision':'Devarshi Aggarwal’s computer vision work: license-plate recognition and people analytics at Jio, driver monitoring at Samsung, and rice phenotyping at IIT Bombay.','projects/hardware':'Electronics and maker projects by Devarshi Aggarwal: Arduino gamepads, Raspberry Pi hardware and PCB design.',research:'Publications by Devarshi Aggarwal in plant phenomics (Plants, MDPI) and graph theory (IEEE CICT 2020), and current questions in robot learning.',about:identity.summary,books:'Books, stories and poems written by Devarshi Aggarwal.'};
+let description:string|undefined, image:string|undefined, type:'website'|'article'|'profile'='website', published:Date|undefined, modified:Date|undefined, jsonLd:Record<string,unknown>[]=[];
+if(info.kind==='article'){const d=info.article.data;description=d.description||undefined;image=d.thumbnail;type='article';published=d.date;modified=d.updated;jsonLd=[postingJsonLd({url,title:d.title,description:d.description,image:image&&new URL(image,SITE).href,published:d.date,modified:d.updated,tags:d.tags})];}
+else if(info.kind==='book'){const d=info.book.data;description=d.description;image=d.image;jsonLd=[{'@type':'Book',name:d.title,description:d.description,image:new URL(d.image,SITE).href,url:d.book_url,author:{'@id':PERSON_ID}}];}
+else if(info.kind==='page'){description=pageDescriptions[info.id];if(info.id==='about'){type='profile';jsonLd=[{'@type':'ProfilePage',url,mainEntity:{'@id':PERSON_ID}}];}if(info.id==='research')jsonLd=publicationsJsonLd();}
+else description=`Notes by Devarshi Aggarwal tagged “${title}”.`;
 ---
-<Base title={`${title} — Devarshi Aggarwal`}>
+<Base title={`${title} — Devarshi Aggarwal`} description={description} image={image} type={type} published={published} modified={modified} jsonLd={jsonLd}>
   {info.kind==='article'&&<>
     <header class="page-intro article-heading">{info.article.data.category==='Personal writing'?<a class="eyebrow" href="/misc/#writing">← BACK TO POETRY & WRITING</a>:<a class="eyebrow" href="/blog/">← BACK TO THE JOURNAL</a>}<h1>{title}</h1><div class="article-meta"><time datetime={info.article.data.date.toISOString()}>{info.article.data.date.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'})}</time><span>{info.article.data.readingMinutes} min read</span><span>{info.article.data.category}</span>{info.article.data.updated&&<span>Updated {info.article.data.updated.toLocaleDateString('en-GB',{month:'short',year:'numeric',timeZone:'UTC'})}</span>}</div><div class="tags">{info.article.data.tags.map(tag=><a href={`/tags/${tag}/`}>{tag.replace(/-/g,' ')}</a>)}</div></header>
     <div class="reading-layout"><nav class="article-toc" aria-label="Table of contents"><p class="eyebrow">IN THIS NOTE</p>{renderedArticle?.headings.filter(h=>h.depth===2).map(h=><a href={`#${h.slug}`}>{h.text}</a>)}</nav><article class="article-body">{!info.article.data.published&&<p class="article-warning">Local draft preview. This article is excluded from the production site.</p>}{ArticleContent&&<ArticleContent/>}<p class="article-warning">Have a question or a different approach? <a href="mailto:devershigpt6@gmail.com">I’d like to hear it.</a></p><Comments enabled={info.article.data.published} /></article></div>
