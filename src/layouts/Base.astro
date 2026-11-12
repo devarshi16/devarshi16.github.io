@@ -1,9 +1,13 @@
 ---
 import '../styles/global.css';
 import Analytics from '../components/Analytics.astro';
-interface Props { title?: string; description?: string; }
-const { title = 'Devarshi Aggarwal — Robotics & Physical AI', description = 'Robot learning, computer vision, and things made by hand. Explore the work and engineering notes of Devarshi Aggarwal.' } = Astro.props;
+import { identity, personJsonLd, websiteJsonLd } from '../data/identity';
+interface Props { title?: string; description?: string; image?: string; type?: 'website'|'article'|'profile'; published?: Date; modified?: Date; jsonLd?: Record<string, unknown>[]; }
+const { title = 'Devarshi Aggarwal — Robotics & Physical AI', description = 'Devarshi Aggarwal is a Robotics & Physical AI Engineer at Samsung Electro-Mechanics in Bengaluru, working on robot learning, Isaac Sim, VR teleoperation and computer vision. Projects, research and engineering notes.', image, type = 'website', published, modified, jsonLd = [] } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL(image ?? identity.image, Astro.site).href;
+// Machine-readable identity for search and answer engines. Not rendered visually.
+const graph = JSON.stringify({ '@context': 'https://schema.org', '@graph': [personJsonLd(), websiteJsonLd(), ...jsonLd] }).replace(/</g, '\\u003c');
 ---
 <!doctype html>
 <html lang="en">
@@ -11,7 +15,12 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title><meta name="description" content={description} />
     <link rel="canonical" href={canonical} /><meta property="og:title" content={title} /><meta property="og:description" content={description} />
-    <meta property="og:type" content="website" /><meta property="og:url" content={canonical} />
+    <meta property="og:type" content={type} /><meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content="Devarshi Aggarwal" /><meta property="og:image" content={ogImage} /><meta property="og:locale" content="en_US" />
+    {published&&<meta property="article:published_time" content={published.toISOString()} />}{(modified??published)&&<meta property="article:modified_time" content={(modified??published)!.toISOString()} />}{type==='article'&&<meta property="article:author" content={`${Astro.site}about/`} />}
+    <meta name="author" content="Devarshi Aggarwal" /><meta name="twitter:card" content="summary_large_image" /><meta name="twitter:title" content={title} /><meta name="twitter:description" content={description} /><meta name="twitter:image" content={ogImage} />
+    <link rel="author" href="/about/" /><link rel="me" href="https://github.com/devarshi16" /><link rel="me" href="https://www.linkedin.com/in/devarshi-aggarwal/" />
+    <script is:inline type="application/ld+json" set:html={graph}></script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" /><link rel="alternate" type="application/rss+xml" title="Technical Journal" href="/feed.xml" />
     <script is:inline>
       try { document.documentElement.dataset.theme = localStorage.getItem('portfolio-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); }
